@@ -7,5 +7,6 @@
         <file>Toolbar.glade</file>
         <file>Workspace.glade</file>
         <file>Root.glade</file>
+        <file>PersonTable.glade</file>
     </gresource>
 </gresources>

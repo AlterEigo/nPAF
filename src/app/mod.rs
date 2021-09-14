@@ -45,7 +45,7 @@ impl Application {
         let root = self.assemble_root();
         window.set_child(Some(&root));
         let css_provider = gtk::CssProvider::new();
-        css_provider.load_from_resource("/org/altereigo/ae-task-manager/style.css");
+        css_provider.load_from_resource("/org/altereigo/npaf/style.css");
         gtk::StyleContext::add_provider_for_screen(
             &window.screen().unwrap(),
             &css_provider,

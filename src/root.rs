@@ -7,6 +7,12 @@ pub struct MenuBarView {
 
 }
 
+impl MenuBarView {
+    pub fn new() -> Self {
+        MenuBarView {}
+    }
+}
+
 impl View for MenuBarView {
     fn assemble(&self) -> gtk::Widget {
         let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/MenuBar.glade");
@@ -33,6 +39,8 @@ impl View for RootView {
             gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
             gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
         );
+        let menubar = MenuBarView::new().assemble();
+        p_menubar.attach(&menubar, 0, 0, 1, 1);
         let grid: gtk::Grid = gbuilder.object("root").unwrap();
         grid.show();
         grid.dynamic_cast::<gtk::Widget>().unwrap()

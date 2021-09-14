@@ -14,7 +14,8 @@ impl RootView {
 
 impl View for RootView {
     fn assemble(&self) -> gtk::Widget {
-        let grid = gtk::Grid::builder().build();
+        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade");
+        let grid: gtk::Grid = gbuilder.object("root").unwrap();
         grid.show();
         grid.dynamic_cast::<gtk::Widget>().unwrap()
     }

@@ -28,6 +28,11 @@ impl RootView {
 impl View for RootView {
     fn assemble(&self) -> gtk::Widget {
         let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade");
+        let (p_menubar, p_toolbar, p_workspace) = (
+            gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
+            gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
+            gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
+        );
         let grid: gtk::Grid = gbuilder.object("root").unwrap();
         grid.show();
         grid.dynamic_cast::<gtk::Widget>().unwrap()

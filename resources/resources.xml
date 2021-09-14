@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-    <gresource prefix="/org/altereigo/npath">
+    <gresource prefix="/org/altereigo/npaf">
         <file>style.css</file>
         <file>MenuBar.glade</file>
         <file>PersonEditor.glade</file>

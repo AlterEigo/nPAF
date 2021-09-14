@@ -3,7 +3,7 @@
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <!-- n-columns=1 n-rows=1 -->
-  <object class="GtkGrid">
+  <object class="GtkGrid" id="root">
     <property name="width-request">800</property>
     <property name="height-request">25</property>
     <property name="visible">True</property>
@@ -19,7 +19,7 @@
         <property name="row-homogeneous">True</property>
         <property name="column-homogeneous">True</property>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_open">
             <property name="label" translatable="yes">1</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -33,7 +33,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_import">
             <property name="label" translatable="yes">2</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -46,7 +46,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_export">
             <property name="label" translatable="yes">3</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -59,7 +59,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_print_report">
             <property name="label" translatable="yes">4</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -72,7 +72,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_edit_person">
             <property name="label" translatable="yes">13</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -85,7 +85,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_edit_notes">
             <property name="label" translatable="yes">5</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -98,7 +98,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_multimedia">
             <property name="label" translatable="yes">6</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -111,7 +111,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_add_person">
             <property name="label" translatable="yes">7</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -124,7 +124,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_add_family">
             <property name="label" translatable="yes">8</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -137,7 +137,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_find">
             <property name="label" translatable="yes">9</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -150,7 +150,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_rin_search">
             <property name="label" translatable="yes">10</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -163,7 +163,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_descendancy_list">
             <property name="label" translatable="yes">11</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -176,7 +176,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_home_person">
             <property name="label" translatable="yes">12</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -189,7 +189,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_merge">
             <property name="label" translatable="yes">14</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -202,7 +202,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_web_page">
             <property name="label" translatable="yes">15</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -215,7 +215,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_about_lds">
             <property name="label" translatable="yes">16</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -228,7 +228,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="b_help">
             <property name="label" translatable="yes">17</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>

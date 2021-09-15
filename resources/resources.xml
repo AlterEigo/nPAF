@@ -9,5 +9,6 @@
         <file>Root.glade</file>
         <file>PersonTable.glade</file>
         <file>AppWindow.glade</file>
+        <file>Awesome.ttf</file>
     </gresource>
 </gresources>

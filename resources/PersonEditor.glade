@@ -2,6 +2,7 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <!-- interface-css-provider-path style.css -->
   <!-- n-columns=1 n-rows=1 -->
   <object class="GtkGrid" id="root">
     <property name="width-request">800</property>
@@ -13,11 +14,9 @@
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
         <child>
-          <!-- n-columns=3 n-rows=3 -->
-          <object class="GtkGrid">
+          <!-- n-columns=1 n-rows=1 -->
+          <object class="GtkGrid" id="p_fields">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="hexpand">True</property>
@@ -25,30 +24,10 @@
             <child>
               <placeholder/>
             </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
+            <style>
+              <class name="filler"/>
+              <class name="bg-clean"/>
+            </style>
           </object>
           <packing>
             <property name="left-attach">0</property>
@@ -56,13 +35,15 @@
           </packing>
         </child>
         <child>
-          <!-- n-columns=1 n-rows=3 -->
+          <!-- n-columns=1 n-rows=1 -->
           <object class="GtkGrid">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="valign">center</property>
             <child>
               <!-- n-columns=1 n-rows=7 -->
               <object class="GtkGrid">
+                <property name="name">editor-btn-panel</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="row-homogeneous">True</property>
@@ -72,6 +53,10 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <style>
+                      <class name="bg-primary"/>
+                      <class name="rounded"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
@@ -84,6 +69,11 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <style>
+                      <class name="border-primary"/>
+                      <class name="rounded"/>
+                      <class name="color-primary"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
@@ -96,6 +86,12 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <style>
+                      <class name="bg-clean"/>
+                      <class name="rounded"/>
+                      <class name="border-secondary"/>
+                      <class name="color-secondary"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
@@ -108,6 +104,11 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <style>
+                      <class name="rounded"/>
+                      <class name="border-secondary"/>
+                      <class name="color-secondary"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
@@ -123,10 +124,16 @@
                     <property name="column-homogeneous">True</property>
                     <child>
                       <object class="GtkButton" id="b_notes">
-                        <property name="label" translatable="yes">1</property>
+                        <property name="label" translatable="yes"></property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
+                        <property name="always-show-image">True</property>
+                        <style>
+                          <class name="color-secondary"/>
+                          <class name="rounded"/>
+                          <class name="border-secondary"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -135,10 +142,16 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="b_browse_sources">
-                        <property name="label" translatable="yes">2</property>
+                        <property name="label" translatable="yes"></property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
+                        <property name="always-show-image">True</property>
+                        <style>
+                          <class name="border-secondary"/>
+                          <class name="color-secondary"/>
+                          <class name="rounded"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -147,10 +160,16 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="b_address">
-                        <property name="label" translatable="yes">3</property>
+                        <property name="label" translatable="yes"></property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
+                        <property name="always-show-image">True</property>
+                        <style>
+                          <class name="rounded"/>
+                          <class name="color-secondary"/>
+                          <class name="border-secondary"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -159,10 +178,16 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="b_multimedia">
-                        <property name="label" translatable="yes">4</property>
+                        <property name="label" translatable="yes"></property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
+                        <property name="always-show-image">True</property>
+                        <style>
+                          <class name="border-secondary"/>
+                          <class name="color-secondary"/>
+                          <class name="rounded"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -183,6 +208,11 @@ sources</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <style>
+                      <class name="border-secondary"/>
+                      <class name="rounded"/>
+                      <class name="color-secondary"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
@@ -194,12 +224,6 @@ sources</property>
                 <property name="left-attach">0</property>
                 <property name="top-attach">0</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
             </child>
           </object>
           <packing>

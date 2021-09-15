@@ -8,5 +8,6 @@
         <file>Workspace.glade</file>
         <file>Root.glade</file>
         <file>PersonTable.glade</file>
+        <file>AppWindow.glade</file>
     </gresource>
 </gresources>

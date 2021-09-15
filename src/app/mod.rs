@@ -39,9 +39,8 @@ impl Application {
 
     pub fn run(&self) -> i32 {
         Application::load_resources();
-        let window = gtk::ApplicationWindow::builder()
-            .title("AE Task Manager")
-            .build();
+        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/AppWindow.glade");
+        let window: gtk::ApplicationWindow = gbuilder.object("root").unwrap();
         let root = self.assemble_root();
         window.set_child(Some(&root));
         let css_provider = gtk::CssProvider::new();

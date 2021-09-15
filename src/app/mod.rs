@@ -37,11 +37,15 @@ impl Application {
         view.assemble()
     }
 
+    fn init_window(&self) -> gtk::ApplicationWindow {
+        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/AppWindow.glade");
+        gbuilder.object("root").unwrap()
+    }
+
     pub fn run(&self) -> i32 {
         Application::load_resources();
-        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/AppWindow.glade");
-        let window: gtk::ApplicationWindow = gbuilder.object("root").unwrap();
         let root = self.assemble_root();
+        let window = self.init_window();
         window.set_child(Some(&root));
         let css_provider = gtk::CssProvider::new();
         css_provider.load_from_resource("/org/altereigo/npaf/style.css");

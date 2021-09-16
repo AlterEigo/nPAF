@@ -1,6 +1,7 @@
 mod app;
 mod prelude;
 mod root;
+mod person_editor;
 
 use crate::prelude::*;
 use gtk::prelude::*;

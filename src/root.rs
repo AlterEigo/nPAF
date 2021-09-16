@@ -5,17 +5,12 @@ use crate::{
 };
 use std::rc::Rc;
 
-struct ClickEmitter<'a> {
-    callbacks: Vec<Box<dyn Fn(()) + 'a>>
+#[derive(Default)]
+pub struct ClickEmitter {
+    callbacks: Vec<Box<dyn Fn(())>>
 }
 
-impl<'a> ClickEmitter<'a> {
-    pub fn new() -> Self {
-        Self {
-            callbacks: Vec::new()
-        }
-    }
-
+impl ClickEmitter {
     pub fn emit(&self) {
         for it in self.callbacks.iter() {
             (it)(());
@@ -23,20 +18,21 @@ impl<'a> ClickEmitter<'a> {
     }
 }
 
-impl<'a> EventEmitter<'a, ()> for ClickEmitter<'a> {
-    fn subscribe<T: Fn(()) + 'a>(&mut self, cb: T)
+impl EventEmitter<()> for ClickEmitter {
+    fn subscribe<T: Fn(()) + 'static>(&mut self, cb: T)
     {
         self.callbacks.push(Box::new(cb));
     }
 }
 
+#[derive(Default)]
 pub struct MenuBarView {
-
+    pub edit_person_evt: ClickEmitter
 }
 
 impl MenuBarView {
     pub fn new() -> Self {
-        MenuBarView {}
+        Default::default()
     }
 }
 

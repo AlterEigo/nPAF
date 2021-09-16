@@ -38,5 +38,5 @@ pub trait View {
 }
 
 pub trait EventEmitter<T> {
-    fn subscribe<TF: FnOnce(T)>(f: TF);
+    fn subscribe<TF: Fn(T)>(&mut self, f: TF);
 }

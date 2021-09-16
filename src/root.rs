@@ -1,7 +1,20 @@
 use gtk::prelude::*;
 
-use crate::prelude::View;
+use crate::{
+    prelude::*,
+};
 use std::rc::Rc;
+
+struct EditSingleEmitter<'a> {
+    callbacks: Vec<Box<dyn Fn(()) + 'a>>
+}
+
+impl<'a> EventEmitter<'a, ()> for EditSingleEmitter<'a> {
+    fn subscribe<T: Fn(()) + 'a>(&mut self, cb: T)
+    {
+        self.callbacks.push(Box::new(cb));
+    }
+}
 
 pub struct MenuBarView {
 

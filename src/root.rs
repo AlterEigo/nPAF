@@ -27,7 +27,6 @@ impl EventEmitter<()> for ClickEmitter {
 
 #[derive(Default)]
 pub struct MenuBarView {
-    pub edit_person_evt: ClickEmitter
 }
 
 impl MenuBarView {
@@ -45,13 +44,14 @@ impl View for MenuBarView {
     }
 }
 
+#[derive(Default)]
 pub struct ToolBarView {
-
+    pub add_person_evt: Rc<ClickEmitter>
 }
 
 impl ToolBarView {
     pub fn new() -> Self {
-        ToolBarView {}
+        Default::default()
     }
 }
 
@@ -59,6 +59,11 @@ impl View for ToolBarView {
     fn assemble(&self) -> gtk::Widget {
         let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/Toolbar.glade");
         let root: gtk::Grid = gbuilder.object("root").unwrap();
+        let btn: gtk::Button = gbuilder.object("b_add_person").unwrap();
+        let emitter = self.add_person_evt.clone();
+        btn.connect_clicked(move |_| {
+            emitter.emit();
+        });
         root.show();
         root.dynamic_cast::<gtk::Widget>().unwrap()
     }

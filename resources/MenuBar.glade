@@ -5,6 +5,7 @@
   <!-- interface-css-provider-path style.css -->
   <!-- n-columns=9 n-rows=1 -->
   <object class="GtkGrid" id="root">
+    <property name="name">menu-bar</property>
     <property name="width-request">800</property>
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -16,6 +17,7 @@
         <property name="receives-default">True</property>
         <style>
           <class name="bg-primary"/>
+          <class name="rectangle"/>
         </style>
       </object>
       <packing>
@@ -122,7 +124,7 @@
             <property name="hexpand">True</property>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">-</property>
+                <property name="label" translatable="yes"></property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -134,7 +136,7 @@
             </child>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">O</property>
+                <property name="label" translatable="yes"></property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -146,7 +148,7 @@
             </child>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">X</property>
+                <property name="label" translatable="yes"></property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>

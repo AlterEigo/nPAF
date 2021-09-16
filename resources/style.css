@@ -20,6 +20,8 @@ button {
     padding: 0.2rem;
     background-image: none;
     border-image: none;
+    border-width: 0px;
+    box-shadow: none;
 }
 
 button:hover {
@@ -30,6 +32,15 @@ button:hover {
 
 button:active {
     background-color: #4dbc5e;
+    color: #FFFFFF;
+}
+
+#menu-bar button {
+    border-radius: 0px;
+}
+
+#tool-bar button {
+    border-radius: 0px;
 }
 
 .bg-clean {
@@ -53,6 +64,10 @@ button:active {
 
 .rounded {
     border-radius: 0.5rem;
+}
+
+.rectangle {
+    border-radius: 0px;
 }
 
 .border-primary {
@@ -88,4 +103,12 @@ button:active {
 
 .color-urgent {
     color: #e55842;
+}
+
+.h-separator {
+    min-height: 0.05rem;
+}
+
+.v-separator {
+    min-width: 0.2rem;
 }

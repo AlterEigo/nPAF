@@ -5,11 +5,11 @@ use crate::{
 };
 use std::rc::Rc;
 
-struct EditSingleEmitter<'a> {
+struct ClickEmitter<'a> {
     callbacks: Vec<Box<dyn Fn(()) + 'a>>
 }
 
-impl<'a> EditSingleEmitter<'a> {
+impl<'a> ClickEmitter<'a> {
     pub fn new() -> Self {
         Self {
             callbacks: Vec::new()
@@ -23,7 +23,7 @@ impl<'a> EditSingleEmitter<'a> {
     }
 }
 
-impl<'a> EventEmitter<'a, ()> for EditSingleEmitter<'a> {
+impl<'a> EventEmitter<'a, ()> for ClickEmitter<'a> {
     fn subscribe<T: Fn(()) + 'a>(&mut self, cb: T)
     {
         self.callbacks.push(Box::new(cb));

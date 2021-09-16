@@ -7,43 +7,141 @@
     <columns>
       <!-- column-name id -->
       <column type="gint64"/>
-      <!-- column-name style -->
-      <column type="PangoStyle"/>
       <!-- column-name justification -->
       <column type="GtkJustification"/>
       <!-- column-name value -->
       <column type="gchararray"/>
       <!-- column-name description -->
       <column type="gchararray"/>
+      <!-- column-name font_weight -->
+      <column type="gint"/>
     </columns>
     <data>
       <row>
         <col id="0">0</col>
-        <col id="1">oblique</col>
-        <col id="2">left</col>
-        <col id="3" translatable="yes"/>
-        <col id="4" translatable="yes">Birth place</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Full name:</col>
+        <col id="4">700</col>
       </row>
       <row>
         <col id="0">1</col>
-        <col id="1">normal</col>
-        <col id="2">center</col>
-        <col id="3" translatable="yes"/>
-        <col id="4" translatable="yes">Birth date</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Sex:</col>
+        <col id="4">700</col>
       </row>
       <row>
         <col id="0">2</col>
-        <col id="1">oblique</col>
-        <col id="2">left</col>
-        <col id="3" translatable="yes"/>
-        <col id="4" translatable="yes">Death place</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Birth:</col>
+        <col id="4">700</col>
       </row>
       <row>
         <col id="0">3</col>
-        <col id="1">normal</col>
-        <col id="2">center</col>
-        <col id="3" translatable="yes"/>
-        <col id="4" translatable="yes">Death date</col>
+        <col id="1">right</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Place:</col>
+        <col id="4">400</col>
+      </row>
+      <row>
+        <col id="0">4</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Death:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">5</col>
+        <col id="1">right</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Place:</col>
+        <col id="4">400</col>
+      </row>
+      <row>
+        <col id="0">6</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Christening:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">7</col>
+        <col id="1">right</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Place:</col>
+        <col id="4">400</col>
+      </row>
+      <row>
+        <col id="0">8</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Burial:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">9</col>
+        <col id="1">right</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Place:</col>
+        <col id="4">400</col>
+      </row>
+      <row>
+        <col id="0">10</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Title (prefix):</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">11</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Married name:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">12</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Also Known As:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">13</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Nickname:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">14</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Cause of death:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">15</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Physical description:</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">16</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Ancestral File Number</col>
+        <col id="4">700</col>
+      </row>
+      <row>
+        <col id="0">17</col>
+        <col id="1">left</col>
+        <col id="2" translatable="yes"/>
+        <col id="3" translatable="yes">Custom ID:</col>
+        <col id="4">700</col>
       </row>
     </data>
   </object>
@@ -58,6 +156,7 @@
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="hexpand">False</property>
         <child>
           <!-- n-columns=1 n-rows=1 -->
           <object class="GtkGrid" id="p_fields">
@@ -77,11 +176,14 @@
                     <property name="resizable">True</property>
                     <property name="title" translatable="yes">Property</property>
                     <child>
-                      <object class="GtkCellRendererText"/>
+                      <object class="GtkCellRendererText">
+                        <property name="cell-background-gdk">#dededddddada</property>
+                        <property name="single-paragraph-mode">True</property>
+                        <property name="variant">small-caps</property>
+                      </object>
                       <attributes>
-                        <attribute name="alignment">2</attribute>
-                        <attribute name="style">1</attribute>
-                        <attribute name="text">4</attribute>
+                        <attribute name="text">3</attribute>
+                        <attribute name="weight">4</attribute>
                       </attributes>
                     </child>
                   </object>
@@ -90,12 +192,14 @@
                   <object class="GtkTreeViewColumn">
                     <property name="resizable">True</property>
                     <property name="title" translatable="yes">Value</property>
+                    <property name="expand">True</property>
                     <child>
                       <object class="GtkCellRendererText">
                         <property name="editable">True</property>
+                        <property name="single-paragraph-mode">True</property>
                       </object>
                       <attributes>
-                        <attribute name="text">3</attribute>
+                        <attribute name="text">2</attribute>
                       </attributes>
                     </child>
                   </object>

@@ -36,3 +36,7 @@ pub type Result<Data> = std::result::Result<Data, Error>;
 pub trait View {
     fn assemble(&self) -> gtk::Widget;
 }
+
+pub trait EventEmitter<T> {
+    fn subscribe<TF: FnOnce(T)>(f: TF);
+}

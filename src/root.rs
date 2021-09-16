@@ -7,19 +7,19 @@ use std::rc::Rc;
 
 #[derive(Default)]
 pub struct ClickEmitter {
-    callbacks: Vec<Box<dyn Fn(())>>
+    callbacks: Vec<Box<dyn Fn(gtk::Button)>>
 }
 
 impl ClickEmitter {
-    pub fn emit(&self) {
+    pub fn emit(&self, btn: gtk::Button) {
         for it in self.callbacks.iter() {
-            (it)(());
+            (it)(btn.clone());
         }
     }
 }
 
-impl EventEmitter<()> for ClickEmitter {
-    fn subscribe<T: Fn(()) + 'static>(&mut self, cb: T)
+impl EventEmitter<gtk::Button> for ClickEmitter {
+    fn subscribe<T: Fn(gtk::Button) + 'static>(&mut self, cb: T)
     {
         self.callbacks.push(Box::new(cb));
     }
@@ -61,8 +61,8 @@ impl View for ToolBarView {
         let root: gtk::Grid = gbuilder.object("root").unwrap();
         let btn: gtk::Button = gbuilder.object("b_add_person").unwrap();
         let emitter = self.add_person_evt.clone();
-        btn.connect_clicked(move |_| {
-            emitter.emit();
+        btn.connect_clicked(move |btn| {
+            emitter.emit(btn.clone());
         });
         root.show();
         root.dynamic_cast::<gtk::Widget>().unwrap()

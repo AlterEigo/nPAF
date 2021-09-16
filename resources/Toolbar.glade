@@ -10,6 +10,7 @@
     <child>
       <!-- n-columns=17 n-rows=1 -->
       <object class="GtkGrid">
+        <property name="name">tool-bar</property>
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="valign">start</property>

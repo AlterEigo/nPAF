@@ -37,6 +37,6 @@ pub trait View {
     fn assemble(&self) -> gtk::Widget;
 }
 
-pub trait EventEmitter<T> {
-    fn subscribe<TF: Fn(T)>(&mut self, f: TF);
+pub trait EventEmitter<'a, T> {
+    fn subscribe<TF: Fn(T) + 'a>(&mut self, f: TF);
 }

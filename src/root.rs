@@ -9,6 +9,20 @@ struct EditSingleEmitter<'a> {
     callbacks: Vec<Box<dyn Fn(()) + 'a>>
 }
 
+impl<'a> EditSingleEmitter<'a> {
+    pub fn new() -> Self {
+        Self {
+            callbacks: Vec::new()
+        }
+    }
+
+    pub fn emit(&self) {
+        for it in self.callbacks.iter() {
+            (it)(());
+        }
+    }
+}
+
 impl<'a> EventEmitter<'a, ()> for EditSingleEmitter<'a> {
     fn subscribe<T: Fn(()) + 'a>(&mut self, cb: T)
     {

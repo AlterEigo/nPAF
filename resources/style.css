@@ -18,6 +18,7 @@
 
 #family_tab_content frame {
     min-height: 6rem;
+    min-width: 24rem;
 }
 
 button {

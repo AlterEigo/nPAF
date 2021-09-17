@@ -125,6 +125,8 @@ impl View for RootView {
         });
         let toolbar = toolbar.assemble();
         p_toolbar.attach(&toolbar, 0, 0, 1, 1);
+        let workspace = WorkspaceView::new();
+        p_workspace.attach(&workspace.assemble(), 0, 0, 1, 1);
         root.set_row_homogeneous(false);
         root.show();
         root.dynamic_cast::<gtk::Widget>().unwrap()

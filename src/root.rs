@@ -6,6 +6,12 @@ use crate::{
 };
 use std::rc::Rc;
 
+enum MenuBarButton {
+    Minimize,
+    Maximize,
+    Close
+}
+
 #[derive(Default)]
 pub struct MenuBarView {
     gbuilder: gtk::Builder
@@ -16,8 +22,13 @@ impl MenuBarView {
         Default::default()
     }
 
-    pub fn button(&self, name: &str) -> Option<gtk::Button> {
-        self.gbuilder.object(name)
+    pub fn button(&self, name: MenuBarButton) -> gtk::Button {
+        let getter = |name| -> gtk::Button { self.gbuilder.object(name).unwrap() };
+        match name {
+            MenuBarButton::Close => getter("b_close"),
+            MenuBarButton::Minimize => getter("b_minimize"),
+            MenuBarButton::Maximize => getter("b_maximize")
+        }
     }
 }
 

@@ -53,22 +53,24 @@ impl View for ToolBarView {
 }
 
 pub struct RootView {
+    gbuilder: gtk::Builder
 }
 
 impl RootView {
     pub fn new() -> Self {
-        RootView {}
+        RootView {
+            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade")
+        }
     }
 }
 
 impl View for RootView {
     fn assemble(&self) -> gtk::Widget {
-        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade");
-        let root: gtk::Grid = gbuilder.object("root").unwrap();
+        let root: gtk::Grid = self.gbuilder.object("root").unwrap();
         let (p_menubar, p_toolbar, p_workspace) = (
-            gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
-            gbuilder.object::<gtk::Grid>("p_tool_bar").unwrap(),
-            gbuilder.object::<gtk::Grid>("p_workspace").unwrap(),
+            self.gbuilder.object::<gtk::Grid>("p_menu_bar").unwrap(),
+            self.gbuilder.object::<gtk::Grid>("p_tool_bar").unwrap(),
+            self.gbuilder.object::<gtk::Grid>("p_workspace").unwrap(),
         );
         let menubar = MenuBarView::new().assemble();
         p_menubar.attach(&menubar, 0, 0, 1, 1);

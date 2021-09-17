@@ -37,6 +37,10 @@ pub trait View {
     fn assemble(&self) -> gtk::Widget;
 }
 
+pub trait Windowed: View {
+    fn assemble_window(&self) -> gtk::Window;
+}
+
 pub trait EventEmitter<T> {
     fn subscribe<TF: Fn(T) + 'static>(&mut self, f: TF);
 }

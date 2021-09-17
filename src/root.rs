@@ -6,26 +6,6 @@ use crate::{
 use std::rc::Rc;
 
 #[derive(Default)]
-pub struct ClickEmitter {
-    callbacks: Vec<Box<dyn Fn(gtk::Button)>>
-}
-
-impl ClickEmitter {
-    pub fn emit(&self, btn: gtk::Button) {
-        for it in self.callbacks.iter() {
-            (it)(btn.clone());
-        }
-    }
-}
-
-impl EventEmitter<gtk::Button> for ClickEmitter {
-    fn subscribe<T: Fn(gtk::Button) + 'static>(&mut self, cb: T)
-    {
-        self.callbacks.push(Box::new(cb));
-    }
-}
-
-#[derive(Default)]
 pub struct MenuBarView {
 }
 
@@ -46,7 +26,6 @@ impl View for MenuBarView {
 
 #[derive(Default)]
 pub struct ToolBarView {
-    pub add_person_evt: Rc<ClickEmitter>
 }
 
 impl ToolBarView {
@@ -60,9 +39,7 @@ impl View for ToolBarView {
         let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/Toolbar.glade");
         let root: gtk::Grid = gbuilder.object("root").unwrap();
         let btn: gtk::Button = gbuilder.object("b_add_person").unwrap();
-        let emitter = self.add_person_evt.clone();
         btn.connect_clicked(move |btn| {
-            emitter.emit(btn.clone());
         });
         root.show();
         root.dynamic_cast::<gtk::Widget>().unwrap()

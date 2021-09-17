@@ -3,6 +3,27 @@ use gtk::prelude::*;
 use crate::{person_editor::PersonEditorView, prelude::*};
 use std::rc::Rc;
 
+#[derive(Default)]
+pub struct WorkspaceView {
+    gbuilder: gtk::Builder
+}
+
+impl WorkspaceView {
+    pub fn new() -> Self {
+        Self {
+            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/Workspace.glade"),
+            ..Default::default()
+        }
+    }
+}
+
+impl View for WorkspaceView {
+    fn assemble(&self) -> gtk::Widget {
+        let root: gtk::Grid = self.gbuilder.object("root").unwrap();
+        root.dynamic_cast::<gtk::Widget>().unwrap()
+    }
+}
+
 pub enum MenuBarButton {
     Minimize,
     Maximize,

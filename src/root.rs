@@ -36,6 +36,11 @@ impl ToolBarView {
             ..Default::default()
         }
     }
+
+    pub fn on_person_edit<CallbackT: Fn(&gtk::Button) + 'static>(&self, cb: CallbackT) {
+        let btn: gtk::Button = self.gbuilder.object("b_add_person").unwrap();
+        btn.connect_clicked(cb);
+    }
 }
 
 impl View for ToolBarView {

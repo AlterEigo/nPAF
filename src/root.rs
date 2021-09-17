@@ -2,6 +2,7 @@ use gtk::prelude::*;
 
 use crate::{
     prelude::*,
+    person_editor::PersonEditorView
 };
 use std::rc::Rc;
 
@@ -71,7 +72,13 @@ impl View for RootView {
         );
         let menubar = MenuBarView::new().assemble();
         p_menubar.attach(&menubar, 0, 0, 1, 1);
-        let toolbar = ToolBarView::new().assemble();
+        let toolbar = ToolBarView::new();
+        toolbar.on_person_edit(|_| {
+            let editor = PersonEditorView::new();
+            let window = editor.assemble_window();
+            window.present();
+        });
+        let toolbar = toolbar.assemble();
         p_toolbar.attach(&toolbar, 0, 0, 1, 1);
         root.set_row_homogeneous(false);
         root.show();

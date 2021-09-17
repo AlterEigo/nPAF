@@ -19,6 +19,7 @@ impl PersonEditorView {
 impl View for PersonEditorView {
     fn assemble(&self) -> gtk::Widget {
         let root: gtk::Grid = self.gbuilder.object("root").unwrap();
+        root.show();
         root.dynamic_cast::<gtk::Widget>().unwrap()
     }
 }

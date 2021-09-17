@@ -44,9 +44,13 @@ impl Application {
 
     pub fn run(&self) -> i32 {
         Application::load_resources();
-        let root = self.assemble_root();
+        let root = RootView::new();
         let window = self.init_window();
-        window.set_child(Some(&root));
+        window.set_child(Some(&root.assemble()));
+        let window_cpy = window.clone();
+        root.on_window_close(move |_| {
+            window_cpy.close();
+        });
         let css_provider = gtk::CssProvider::new();
         css_provider.load_from_resource("/org/altereigo/npaf/style.css");
         gtk::StyleContext::add_provider_for_screen(

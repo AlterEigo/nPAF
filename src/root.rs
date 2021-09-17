@@ -6,7 +6,7 @@ use crate::{
 };
 use std::rc::Rc;
 
-enum MenuBarButton {
+pub enum MenuBarButton {
     Minimize,
     Maximize,
     Close
@@ -19,7 +19,10 @@ pub struct MenuBarView {
 
 impl MenuBarView {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/MenuBar.glade"),
+            ..Default::default()
+        }
     }
 
     pub fn button(&self, name: MenuBarButton) -> gtk::Button {
@@ -34,8 +37,7 @@ impl MenuBarView {
 
 impl View for MenuBarView {
     fn assemble(&self) -> gtk::Widget {
-        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/MenuBar.glade");
-        let grid: gtk::Grid = gbuilder.object("root").unwrap();
+        let grid: gtk::Grid = self.gbuilder.object("root").unwrap();
         grid.show();
         grid.dynamic_cast::<gtk::Widget>().unwrap()
     }

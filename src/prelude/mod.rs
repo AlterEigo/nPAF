@@ -21,10 +21,7 @@ impl Error {
                 "ServiceNotBound: Could not perform operation because '{}' is not bound.",
                 msg
             ),
-            Error::BuilderError(msg) => format!(
-                "BuilderError: {}",
-                msg
-            ),
+            Error::BuilderError(msg) => format!("BuilderError: {}", msg),
             _ => "Unknown: error type not described".to_string(),
         };
         msg

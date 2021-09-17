@@ -1,17 +1,15 @@
 use gtk::prelude::*;
 
-use crate::{
-    prelude::*,
-};
+use crate::prelude::*;
 
 pub struct PersonEditorView {
-    gbuilder: gtk::Builder
+    gbuilder: gtk::Builder,
 }
 
 impl PersonEditorView {
     pub fn new() -> Self {
         Self {
-            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/PersonEditor.glade")
+            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/PersonEditor.glade"),
         }
     }
 }

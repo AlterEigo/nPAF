@@ -1,20 +1,17 @@
 use gtk::prelude::*;
 
-use crate::{
-    prelude::*,
-    person_editor::PersonEditorView
-};
+use crate::{person_editor::PersonEditorView, prelude::*};
 use std::rc::Rc;
 
 pub enum MenuBarButton {
     Minimize,
     Maximize,
-    Close
+    Close,
 }
 
 #[derive(Default)]
 pub struct MenuBarView {
-    gbuilder: gtk::Builder
+    gbuilder: gtk::Builder,
 }
 
 impl MenuBarView {
@@ -30,7 +27,7 @@ impl MenuBarView {
         match name {
             MenuBarButton::Close => getter("b_close"),
             MenuBarButton::Minimize => getter("b_minimize"),
-            MenuBarButton::Maximize => getter("b_maximize")
+            MenuBarButton::Maximize => getter("b_maximize"),
         }
     }
 }
@@ -45,7 +42,7 @@ impl View for MenuBarView {
 
 #[derive(Default)]
 pub struct ToolBarView {
-    gbuilder: gtk::Builder
+    gbuilder: gtk::Builder,
 }
 
 impl ToolBarView {
@@ -72,14 +69,14 @@ impl View for ToolBarView {
 
 pub struct RootView {
     gbuilder: gtk::Builder,
-    menubar: MenuBarView
+    menubar: MenuBarView,
 }
 
 impl RootView {
     pub fn new() -> Self {
         RootView {
             gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade"),
-            menubar: MenuBarView::new()
+            menubar: MenuBarView::new(),
         }
     }
 

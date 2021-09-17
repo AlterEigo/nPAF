@@ -13,9 +13,8 @@ pub struct Application {
     gtk_app: gtk::Application,
 }
 
-#[derive(Default,Clone)]
-pub struct ApplicationBuilder {
-}
+#[derive(Default, Clone)]
+pub struct ApplicationBuilder {}
 
 impl ApplicationBuilder {
     pub fn build(self) -> Result<Application> {

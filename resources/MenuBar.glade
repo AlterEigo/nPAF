@@ -114,6 +114,7 @@
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="valign">center</property>
         <property name="hexpand">True</property>
         <child>
           <!-- n-columns=3 n-rows=1 -->

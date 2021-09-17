@@ -8,11 +8,16 @@ use std::rc::Rc;
 
 #[derive(Default)]
 pub struct MenuBarView {
+    gbuilder: gtk::Builder
 }
 
 impl MenuBarView {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn button(&self, name: &str) -> Option<gtk::Button> {
+        self.gbuilder.object(name)
     }
 }
 
@@ -53,14 +58,21 @@ impl View for ToolBarView {
 }
 
 pub struct RootView {
-    gbuilder: gtk::Builder
+    gbuilder: gtk::Builder,
+    menubar: MenuBarView
 }
 
 impl RootView {
     pub fn new() -> Self {
         RootView {
-            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade")
+            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/Root.glade"),
+            menubar: MenuBarView::new()
         }
+    }
+
+    pub fn on_window_close<CallbackT: Fn(&gtk::Button) + 'static>(&self, f: CallbackT) {
+        // let btn: gtk::Button = self.menubar.button("")
+        // btn.connect_clicked(f);
     }
 }
 
@@ -72,7 +84,7 @@ impl View for RootView {
             self.gbuilder.object::<gtk::Grid>("p_tool_bar").unwrap(),
             self.gbuilder.object::<gtk::Grid>("p_workspace").unwrap(),
         );
-        let menubar = MenuBarView::new().assemble();
+        let menubar = self.menubar.assemble();
         p_menubar.attach(&menubar, 0, 0, 1, 1);
         let toolbar = ToolBarView::new();
         toolbar.on_person_edit(|_| {

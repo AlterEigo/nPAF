@@ -26,21 +26,21 @@ impl View for MenuBarView {
 
 #[derive(Default)]
 pub struct ToolBarView {
+    gbuilder: gtk::Builder
 }
 
 impl ToolBarView {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            gbuilder: gtk::Builder::from_resource("/org/altereigo/npaf/Toolbar.glade"),
+            ..Default::default()
+        }
     }
 }
 
 impl View for ToolBarView {
     fn assemble(&self) -> gtk::Widget {
-        let gbuilder = gtk::Builder::from_resource("/org/altereigo/npaf/Toolbar.glade");
-        let root: gtk::Grid = gbuilder.object("root").unwrap();
-        let btn: gtk::Button = gbuilder.object("b_add_person").unwrap();
-        btn.connect_clicked(move |btn| {
-        });
+        let root: gtk::Grid = self.gbuilder.object("root").unwrap();
         root.show();
         root.dynamic_cast::<gtk::Widget>().unwrap()
     }

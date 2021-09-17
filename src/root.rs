@@ -82,8 +82,8 @@ impl RootView {
     }
 
     pub fn on_window_close<CallbackT: Fn(&gtk::Button) + 'static>(&self, f: CallbackT) {
-        // let btn: gtk::Button = self.menubar.button("")
-        // btn.connect_clicked(f);
+        let btn: gtk::Button = self.menubar.button(MenuBarButton::Close);
+        btn.connect_clicked(f);
     }
 }
 

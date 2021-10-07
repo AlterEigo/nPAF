@@ -1,0 +1,3 @@
+[submodule "gedcom"]
+	path = rust-gedcom
+	url = git@github.com:AlterEigo/rust-gedcom.git

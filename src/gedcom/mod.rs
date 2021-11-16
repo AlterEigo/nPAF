@@ -17,3 +17,15 @@ pub trait Parser {
 
     fn parse(&mut self, file: &Self::FileType) -> RecordRegistry;
 }
+
+struct GedParser {
+
+}
+
+impl Parser for GedParser {
+    type FileType = std::fs::File;
+
+    fn parse(&mut self, file: &Self::FileType) -> RecordRegistry {
+        RecordRegistry::new()
+    }
+}

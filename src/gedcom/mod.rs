@@ -30,6 +30,12 @@ impl Parser for GedParser {
     }
 }
 
+impl Builder<GedParser> for GedParser {
+    fn build(&self) -> Self {
+        GedParser {}
+    }
+}
+
 pub trait Builder<T> {
     fn build(&self) -> T;
 } 

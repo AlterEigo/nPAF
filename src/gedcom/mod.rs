@@ -53,6 +53,6 @@ impl<T> Default for Builder<T> {
 
 impl Builder<GedParser> {
     fn build(self) -> GedParser {
-        GedParser {}
+        *self.construct
     }
 }

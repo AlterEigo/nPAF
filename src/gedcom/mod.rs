@@ -18,9 +18,12 @@ pub trait Parser {
     fn parse(&mut self, file: &Self::FileType) -> RecordRegistry;
 }
 
+#[derive(Default)]
 struct GedParser {
 
 }
+
+impl Buildable<GedParser> for GedParser {}
 
 impl Parser for GedParser {
     type FileType = std::fs::File;
@@ -30,12 +33,26 @@ impl Parser for GedParser {
     }
 }
 
-impl Builder<GedParser> for GedParser {
-    fn build(&self) -> Self {
-        GedParser {}
+trait Buildable<T: Default> {
+    fn builder() -> Builder<T> {
+        Default::default()
     }
 }
 
-pub trait Builder<T> {
-    fn build(&self) -> T;
-} 
+struct Builder<T> {
+    construct: Box<T>
+}
+
+impl<T> Default for Builder<T> {
+    fn default() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+}
+
+impl Builder<GedParser> {
+    fn build(self) -> GedParser {
+        GedParser {}
+    }
+}

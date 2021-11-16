@@ -29,3 +29,7 @@ impl Parser for GedParser {
         RecordRegistry::new()
     }
 }
+
+pub trait Builder<T> {
+    fn build(&self) -> T;
+} 

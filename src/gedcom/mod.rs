@@ -19,7 +19,7 @@ pub trait Parser {
 }
 
 #[derive(Default)]
-struct GedParser {
+pub struct GedParser {
 
 }
 
@@ -33,13 +33,13 @@ impl Parser for GedParser {
     }
 }
 
-trait Buildable<T: Default> {
+pub trait Buildable<T: Default> {
     fn builder() -> Builder<T> {
         Default::default()
     }
 }
 
-struct Builder<T> {
+pub struct Builder<T> {
     construct: Box<T>
 }
 

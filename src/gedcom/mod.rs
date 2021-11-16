@@ -23,7 +23,9 @@ pub struct GedParser {
 
 }
 
-impl Buildable<GedParser> for GedParser {}
+impl Buildable for GedParser {
+    type BuilderType = GedParserBuilder;
+}
 
 impl Parser for GedParser {
     type FileType = std::fs::File;
@@ -33,26 +35,29 @@ impl Parser for GedParser {
     }
 }
 
-pub trait Buildable<T: Default> {
-    fn builder() -> Builder<T> {
+pub trait Buildable {
+    type BuilderType: Default;
+
+    fn builder() -> Self::BuilderType {
         Default::default()
     }
 }
 
-pub struct Builder<T> {
-    construct: Box<T>
+pub trait Builder {
+    type BuildableType: Buildable;
+
+    fn build(self) -> Self::BuildableType;
 }
 
-impl<T> Default for Builder<T> {
-    fn default() -> Self {
-        Self {
-            ..Default::default()
-        }
-    }
+#[derive(Default)]
+pub struct GedParserBuilder {
+    construct: Box<GedParser>
 }
 
-impl Builder<GedParser> {
-    fn build(self) -> GedParser {
+impl Builder for GedParserBuilder {
+    type BuildableType = GedParser;
+
+    fn build(self) -> Self::BuildableType {
         *self.construct
     }
 }

@@ -47,14 +47,15 @@ pub struct GedParser {
 }
 
 impl GedParser {
-    fn count_unparsed(&self, file: &std::fs::File) -> i64 {
+    pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
         let mut reader = BufReader::new(file);
         let re = GedParser::regex_line();
         let re_ref = GedParser::regex_ref();
         reader.lines()
             .filter_map(|l| l.ok())
             .filter(|l| !re.is_match(&l) && !re_ref.is_match(&l))
-            .fold(0, |acc, l| acc + 1)
+            .inspect(|l| println!("Unmatched: '{}'", l))
+            .fold(0, |acc, _l| acc + 1)
     }
 
     fn regex_line() -> Regex {
@@ -71,7 +72,7 @@ impl GedParser {
         Regex::new(r"(?x)
                 ^
                 (?P<Level>\d{1,2})\s              # Line level
-                (?P<Tag>@[A-Z]+\d+@)              # Record tag
+                @(?P<Tag>@[A-Z]+\d+)@             # Record tag
                 \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
                 $
             ").unwrap()

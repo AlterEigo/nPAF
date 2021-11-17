@@ -41,6 +41,28 @@ pub struct GedParser {
 
 }
 
+impl GedParser {
+    fn regex_line() -> Regex {
+        Regex::new(r"(?x) # Insignificant whitespace mode
+                ^
+                (?P<Level>\d{1,2})\s              # Line level
+                (?P<Tag>_?[A-Z]{3,5})             # Record tag
+                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
+                $
+            ").unwrap()
+    }
+
+    fn regex_ref() -> Regex {
+        Regex::new(r"(?x)
+                ^
+                (?P<Level>\d{1,2})\s              # Line level
+                (?P<Tag>@[A-Z]+\d+@)              # Record tag
+                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
+                $
+            ").unwrap()
+    }
+}
+
 impl Buildable for GedParser {
     type BuilderType = GedParserBuilder;
 }
@@ -50,23 +72,11 @@ impl Parser for GedParser {
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
         let mut reader = BufReader::new(file);
-        let re = Regex::new(r"(?x) # Insignificant whitespace mode
-                ^
-                (?P<Level>\d{1,2})\s              # Line level
-                (?P<Tag>_?[A-Z]{3,5})             # Record tag
-                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
-                $
-            ").unwrap();
-        let re_ref = Regex::new(r"(?x)
-                ^
-                (?P<Level>\d{1,2})\s              # Line level
-                (?P<Tag>@[A-Z]+\d+@)              # Record tag
-                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
-                $
-            ").unwrap();
+        let re = GedParser::regex_line();
+        let re_ref = GedParser::regex_ref();
         let contents = reader.lines()
             .map(|l| l.unwrap())
-            .filter(|l| !re.is_match(l) && !re_ref.is_match(l))
+            .filter(|l| re.is_match(l) || re_ref.is_match(l))
             .inspect(|l| println!("{}", l));
         let unmatched: Vec<String> = contents.collect();
         Ok(RecordRegistry::new())

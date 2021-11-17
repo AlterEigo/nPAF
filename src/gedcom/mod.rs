@@ -4,6 +4,9 @@ use std::fs::File;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
+extern crate regex;
+use regex::Regex;
+
 pub struct Record {
     id: u64,
     name: String,
@@ -14,7 +17,7 @@ pub struct Record {
 
 type IOError = std::io::Error;
 
-enum ParseError {
+pub enum ParseError {
     IO(IOError)
 }
 
@@ -24,8 +27,8 @@ impl From<IOError> for ParseError {
     }
 }
 
-type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
-type ParseResult = Result<RecordRegistry, ParseError>;
+pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
+pub type ParseResult = Result<RecordRegistry, ParseError>;
 
 pub trait Parser {
     type FileType;
@@ -47,7 +50,18 @@ impl Parser for GedParser {
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
         let mut reader = BufReader::new(file);
-        let contents = reader.lines().map(|l| l.unwrap());
+        let re = Regex::new(r"(?x) # Insignificant whitespace mode
+            ^
+            (?P<Level>\d{1,2})\s        # Line level
+            (?P<Tag>[A-Z]{4})\s*?       # Record tag
+            (?P<Content>[^\r\n]*)+?     # Record content
+            $
+        ").unwrap();
+        let contents = reader.lines()
+            .map(|l| l.unwrap())
+            .filter(|l| !re.is_match(l))
+            .inspect(|l| println!("Unmatched: '{}'", l));
+        let unmatched: Vec<String> = contents.collect();
         Ok(RecordRegistry::new())
     }
 }

@@ -88,6 +88,12 @@ impl Parser for GedParser {
                         caps.name("Tag").unwrap().as_str().to_owned(),
                         if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
                     ))
+                } else if let Some(caps) = re_ref.captures(&l) {
+                    Some(GedLine::Ref(
+                        caps.name("Level").unwrap().as_str().parse().unwrap(),
+                        caps.name("Tag").unwrap().as_str().to_owned(),
+                        if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
+                    ))
                 } else {
                     None
                 }

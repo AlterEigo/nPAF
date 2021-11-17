@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
-use std::cell::RefCell;
+use std::cell::{RefMut, RefCell};
 use std::collections::HashMap;
 
 extern crate regex;
@@ -9,11 +9,11 @@ use regex::Regex;
 
 #[derive(Default)]
 pub struct Record {
-    id: u64,
-    name: String,
-    father: Option<Rc<RefCell<Record>>>,
-    mother: Option<Rc<RefCell<Record>>>,
-    children: Vec<Rc<RefCell<Record>>>
+    pub id: u64,
+    pub name: String,
+    pub father: Option<Rc<RefCell<Record>>>,
+    pub mother: Option<Rc<RefCell<Record>>>,
+    pub children: Vec<Rc<RefCell<Record>>>
 }
 
 type IOError = std::io::Error;
@@ -33,6 +33,7 @@ impl From<IOError> for ParseError {
     }
 }
 
+pub type RecordRef = Rc<RefCell<Record>>;
 pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
 pub type ParseResult = Result<RecordRegistry, ParseError>;
 
@@ -80,12 +81,16 @@ impl GedParser {
         }
     }
 
-    fn structure<Iter>(iter: Iter) -> RecordRegistry
+    fn structure<Iter>(iter: Iter) -> Vec<RecordRef>
         where Iter: std::iter::Iterator<Item=GedLine>
     {
         let iter = iter.peekable();
+        let mut items: Vec<RecordRef> = Vec::new();
+        let mut id: u64 = 0;
         let mut parent: Record = Default::default();
-        RecordRegistry::new()
+        parent.id = id;
+        id += 1;
+        items
     }
 
     fn regex_line() -> Regex {
@@ -121,7 +126,7 @@ impl Parser for GedParser {
         let contents = reader.lines()
             .filter_map(|l| l.ok())
             .filter_map(|l| Self::parse_line(&l));
-        Ok(Self::structure(contents))
+        Ok(RecordRegistry::new())
     }
 }
 

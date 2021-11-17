@@ -81,16 +81,10 @@ impl GedParser {
         }
     }
 
-    fn structure<Iter>(iter: Iter) -> Vec<RecordRef>
+    fn structure<Iter>(iter: Iter) -> (RecordRef, Iter)
         where Iter: std::iter::Iterator<Item=GedLine>
     {
-        let iter = iter.peekable();
-        let mut items: Vec<RecordRef> = Vec::new();
-        let mut id: u64 = 0;
-        let mut parent: Record = Default::default();
-        parent.id = id;
-        id += 1;
-        items
+        (Rc::new(RefCell::new(Default::default())), iter)
     }
 
     fn regex_line() -> Regex {

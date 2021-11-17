@@ -22,8 +22,8 @@ pub enum ParseError {
 }
 
 enum GedLine {
-    Data(String),
-    Ref(String)
+    Data(i32, String, Option<String>),
+    Ref(i32, String, Option<String>)
 }
 
 impl From<IOError> for ParseError {
@@ -82,10 +82,12 @@ impl Parser for GedParser {
         let contents = reader.lines()
             .filter_map(|l| l.ok())
             .filter_map(|l| {
-                if re.is_match(&l) {
-                    Some(GedLine::Data(l))
-                } else if re_ref.is_match(&l) {
-                    Some(GedLine::Ref(l))
+                if let Some(caps) = re.captures(&l) {
+                    Some(GedLine::Data(
+                        caps.name("Level").unwrap().as_str().parse().unwrap(),
+                        caps.name("Tag").unwrap().as_str().to_owned(),
+                        if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
+                    ))
                 } else {
                     None
                 }

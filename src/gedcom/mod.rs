@@ -51,16 +51,23 @@ impl Parser for GedParser {
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
         let mut reader = BufReader::new(file);
         let re = Regex::new(r"(?x) # Insignificant whitespace mode
-            ^
-            (?P<Level>\d{1,2})\s        # Line level
-            (?P<Tag>[A-Z]{4})\s*?       # Record tag
-            (?P<Content>[^\r\n]*)+?     # Record content
-            $
-        ").unwrap();
+                ^
+                (?P<Level>\d{1,2})\s              # Line level
+                (?P<Tag>_?[A-Z]{3,5})             # Record tag
+                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
+                $
+            ").unwrap();
+        let re_ref = Regex::new(r"(?x)
+                ^
+                (?P<Level>\d{1,2})\s              # Line level
+                (?P<Tag>@[A-Z]+\d+@)              # Record tag
+                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
+                $
+            ").unwrap();
         let contents = reader.lines()
             .map(|l| l.unwrap())
-            .filter(|l| !re.is_match(l))
-            .inspect(|l| println!("Unmatched: '{}'", l));
+            .filter(|l| !re.is_match(l) && !re_ref.is_match(l))
+            .inspect(|l| println!("{}", l));
         let unmatched: Vec<String> = contents.collect();
         Ok(RecordRegistry::new())
     }

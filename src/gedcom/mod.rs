@@ -7,6 +7,7 @@ use std::collections::HashMap;
 extern crate regex;
 use regex::Regex;
 
+#[derive(Default)]
 pub struct Record {
     id: u64,
     name: String,
@@ -79,6 +80,14 @@ impl GedParser {
         }
     }
 
+    fn structure<Iter>(iter: Iter) -> RecordRegistry
+        where Iter: std::iter::Iterator<Item=GedLine>
+    {
+        let iter = iter.peekable();
+        let mut parent: Record = Default::default();
+        RecordRegistry::new()
+    }
+
     fn regex_line() -> Regex {
         Regex::new(r"(?x) # Insignificant whitespace mode
                 ^
@@ -109,12 +118,10 @@ impl Parser for GedParser {
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
         let mut reader = BufReader::new(file);
-        let re = GedParser::regex_line();
-        let re_ref = GedParser::regex_ref();
         let contents = reader.lines()
             .filter_map(|l| l.ok())
             .filter_map(|l| Self::parse_line(&l));
-        Ok(RecordRegistry::new())
+        Ok(Self::structure(contents))
     }
 }
 

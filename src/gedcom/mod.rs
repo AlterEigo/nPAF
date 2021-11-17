@@ -21,6 +21,11 @@ pub enum ParseError {
     IO(IOError)
 }
 
+enum GedLine {
+    Data(String),
+    Ref(String)
+}
+
 impl From<IOError> for ParseError {
     fn from(o: IOError) -> ParseError {
         ParseError::IO(o)
@@ -75,10 +80,16 @@ impl Parser for GedParser {
         let re = GedParser::regex_line();
         let re_ref = GedParser::regex_ref();
         let contents = reader.lines()
-            .map(|l| l.unwrap())
-            .filter(|l| re.is_match(l) || re_ref.is_match(l))
-            .inspect(|l| println!("{}", l));
-        let unmatched: Vec<String> = contents.collect();
+            .filter_map(|l| l.ok())
+            .filter_map(|l| {
+                if re.is_match(&l) {
+                    Some(GedLine::Data(l))
+                } else if re_ref.is_match(&l) {
+                    Some(GedLine::Ref(l))
+                } else {
+                    None
+                }
+            });
         Ok(RecordRegistry::new())
     }
 }

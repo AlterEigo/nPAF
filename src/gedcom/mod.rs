@@ -7,13 +7,23 @@ use std::collections::HashMap;
 extern crate regex;
 use regex::Regex;
 
-#[derive(Default)]
+pub type RecordRef = Rc<RefCell<Record>>;
+pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
+pub type ParseResult = Result<RecordRegistry, ParseError>;
+
+#[derive(Default,Debug,Clone)]
 pub struct Record {
     pub id: u64,
     pub name: String,
     pub father: Option<Rc<RefCell<Record>>>,
     pub mother: Option<Rc<RefCell<Record>>>,
     pub children: Vec<Rc<RefCell<Record>>>
+}
+
+impl Into<RecordRef> for Record {
+    fn into(self) -> RecordRef {
+        Rc::new(RefCell::new(self))
+    }
 }
 
 type IOError = std::io::Error;
@@ -33,10 +43,6 @@ impl From<IOError> for ParseError {
     }
 }
 
-pub type RecordRef = Rc<RefCell<Record>>;
-pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
-pub type ParseResult = Result<RecordRegistry, ParseError>;
-
 pub trait Parser {
     type FileType;
 
@@ -50,7 +56,7 @@ pub struct GedParser {
 
 impl GedParser {
     pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
-        let mut reader = BufReader::new(file);
+        let reader = BufReader::new(file);
         let re = GedParser::regex_line();
         let re_ref = GedParser::regex_ref();
         reader.lines()
@@ -81,18 +87,32 @@ impl GedParser {
         }
     }
 
-    fn structure<Iter>(iter: Iter) -> (RecordRef, Iter)
-        where Iter: std::iter::Iterator<Item=GedLine>
+    fn structure<'a>(iter: &mut impl std::iter::Iterator<Item=&'a GedLine>) -> RecordRef
     {
-        (Rc::new(RefCell::new(Default::default())), iter)
+        let mut parent: Record = Default::default();
+        let clevel: i32 = match &iter.next().unwrap() {
+            GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
+        };
+
+        while let Some(line) = iter.next() {
+            let nlevel: i32 = match &line {
+                GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
+            };
+            if nlevel <= clevel {
+                break;
+            }
+            let child = Self::structure(iter);
+            parent.children.push(child);
+        }
+        parent.into()
     }
 
     fn regex_line() -> Regex {
         Regex::new(r"(?x) # Insignificant whitespace mode
                 ^
-                (?P<Level>\d{1,2})\s              # Line level
-                (?P<Tag>_?[A-Z]{3,5})             # Record tag
-                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
+                (?P<Level>[0-9]{1,2})\ *       # Line level
+                (?P<Tag>_?[A-Z]{3,5})\ *       # Record tag
+                (?P<Content>[^\r\n]+)?         # Either end of line or content
                 $
             ").unwrap()
     }
@@ -100,9 +120,9 @@ impl GedParser {
     fn regex_ref() -> Regex {
         Regex::new(r"(?x)
                 ^
-                (?P<Level>\d{1,2})\s              # Line level
-                @(?P<Tag>@[A-Z]+\d+)@             # Record tag
-                \s*$   |   (?P<Content>[^\r\n]*)  # Either end of line or content
+                (?P<Level>[0-9]{1,2})\ *           # Line level
+                @(?P<Tag>[A-Z]+\d+)@\ *            # Record tag
+                (?P<Content>[^\r\n]+)?             # Either end of line or content
                 $
             ").unwrap()
     }
@@ -116,10 +136,20 @@ impl Parser for GedParser {
     type FileType = std::fs::File;
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
-        let mut reader = BufReader::new(file);
-        let contents = reader.lines()
+        println!("Parsing.");
+        let reader = BufReader::new(file);
+        let contents: Vec<GedLine> = reader.lines()
             .filter_map(|l| l.ok())
-            .filter_map(|l| Self::parse_line(&l));
+            .filter_map(|l| Self::parse_line(&l))
+            .collect();
+        println!("Contents read, line count: '{}'.", contents.len());
+        let mut records: Vec<RecordRef> = Vec::new();
+        let mut iter = contents.iter().peekable();
+        while let Some(_) = iter.peek() {
+            let child = Self::structure(&mut iter);
+            println!("Pushing top level record to the items...");
+            records.push(child);
+        }
         Ok(RecordRegistry::new())
     }
 }

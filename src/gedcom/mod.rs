@@ -88,6 +88,18 @@ impl GedParser {
         }
     }
 
+    fn read_record<'a, Iter>(mut iter: Iter) -> (Iter, Option<RecordRef>)
+        where Iter: std::iter::Iterator<Item=&'a GedLine>
+    {
+        let level = match &iter.next() {
+            Some(GedLine::Data(lvl, _, _)) | Some(GedLine::Ref(lvl, _, _)) => lvl,
+            _ => return (iter, None)
+        };
+
+        println!("[read_record]: current level: '{}'", level);
+        (iter, Some(Default::default()))
+    }
+
     fn regex_line() -> Regex {
         Regex::new(r"(?x) # Insignificant whitespace mode
                 ^
@@ -126,6 +138,15 @@ impl Parser for GedParser {
         println!("Contents read, line count: '{}'.", contents.len());
         let mut records: Vec<RecordRef> = Vec::new();
         let mut iter = contents.iter();
+        let mut rec: Option<RecordRef>;
+        loop {
+            let result = Self::read_record(iter);
+            iter = result.0;
+            rec = result.1;
+            if let None = rec {
+                break;
+            };
+        }
         Ok(RecordRegistry::new())
     }
 }

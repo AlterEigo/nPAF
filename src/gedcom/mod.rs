@@ -32,6 +32,7 @@ pub enum ParseError {
     IO(IOError)
 }
 
+#[derive(Debug,Clone)]
 enum GedLine {
     Data(i32, String, Option<String>),
     Ref(i32, String, Option<String>)
@@ -87,32 +88,12 @@ impl GedParser {
         }
     }
 
-    fn structure<'a>(iter: &mut impl std::iter::Iterator<Item=&'a GedLine>) -> RecordRef
-    {
-        let mut parent: Record = Default::default();
-        let clevel: i32 = match &iter.next().unwrap() {
-            GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
-        };
-
-        while let Some(line) = iter.next() {
-            let nlevel: i32 = match &line {
-                GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
-            };
-            if nlevel <= clevel {
-                break;
-            }
-            let child = Self::structure(iter);
-            parent.children.push(child);
-        }
-        parent.into()
-    }
-
     fn regex_line() -> Regex {
         Regex::new(r"(?x) # Insignificant whitespace mode
                 ^
                 (?P<Level>[0-9]{1,2})\ *       # Line level
                 (?P<Tag>_?[A-Z]{3,5})\ *       # Record tag
-                (?P<Content>[^\r\n]+)?         # Either end of line or content
+                (?P<Content>[^\r\n]+)*         # Either end of line or content
                 $
             ").unwrap()
     }
@@ -144,12 +125,7 @@ impl Parser for GedParser {
             .collect();
         println!("Contents read, line count: '{}'.", contents.len());
         let mut records: Vec<RecordRef> = Vec::new();
-        let mut iter = contents.iter().peekable();
-        while let Some(_) = iter.peek() {
-            let child = Self::structure(&mut iter);
-            println!("Pushing top level record to the items...");
-            records.push(child);
-        }
+        let mut iter = contents.iter();
         Ok(RecordRegistry::new())
     }
 }

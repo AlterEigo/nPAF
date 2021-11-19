@@ -38,6 +38,14 @@ enum GedLine {
     Ref(i32, String, Option<String>)
 }
 
+impl GedLine {
+    fn level(&self) -> i32 {
+        match &self {
+            Self::Data(lvl, _, _) | Self::Ref(lvl, _, _) => *lvl
+        }
+    }
+}
+
 impl From<IOError> for ParseError {
     fn from(o: IOError) -> ParseError {
         ParseError::IO(o)
@@ -97,9 +105,7 @@ impl GedParser {
         };
         let lvl: Vec<i32> = origin[..2]
             .into_iter()
-            .map(|val| match &val {
-                GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
-            })
+            .map(|val| val.level())
             .collect();
         if lvl[1] <= lvl[0] {
             return (&origin[1..], Some(Default::default()))
@@ -108,7 +114,8 @@ impl GedParser {
         let mut origin = &origin[1..];
         let mut record: Record = Default::default();
 
-        loop {
+        let mut nlevel = if !origin.is_empty() { origin[0].level() } else { 0 };
+        while !origin.is_empty() && nlevel > lvl {
             let (rest, child) = Self::read_record(origin);
             if let None = child {
                 break;
@@ -118,13 +125,7 @@ impl GedParser {
                 .unwrap();
             record.children.push(child);
             origin = rest;
-            let _ = match rest[0] {
-                GedLine::Data(clvl, _, _) | GedLine::Ref(clvl, _, _) => {
-                    if clvl <= lvl {
-                        break;
-                    }
-                }
-            };
+            nlevel = if !origin.is_empty() { origin[0].level() } else { 0 };
         }
         (origin, Some(record))
     }

@@ -90,31 +90,43 @@ impl GedParser {
 
     fn read_record<'a>(origin: &'a [GedLine]) -> (&'a [GedLine], Option<Record>)
     {
-        if origin.is_empty() {
-            return (origin, None);
+        match origin.len() {
+            0 => return (origin, None),
+            1 => return (&origin[1..], Some(Default::default())),
+            _ => ()
         };
-        let clevel: i32 = match &origin[0] {
-            GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
-        };
-        let origin = &origin[1..];
-        let mut children: Vec<&'a GedLine> = Vec::new();
-        let mut iter = origin.iter();
+        let lvl: Vec<i32> = origin[..2]
+            .into_iter()
+            .map(|val| match &val {
+                GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
+            })
+            .collect();
+        if lvl[1] <= lvl[0] {
+            return (&origin[1..], Some(Default::default()))
+        }
+        let lvl = lvl[0];
+        let mut origin = &origin[1..];
         let mut record: Record = Default::default();
-        let _ = origin.iter()
-            .filter_map(|line| {
-                match &line {
-                    GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => {
-                        Some(*lvl)
+
+        loop {
+            let (rest, child) = Self::read_record(origin);
+            if let None = child {
+                break;
+            }
+            let child = child
+                .map(|val| Rc::new(RefCell::new(val)))
+                .unwrap();
+            record.children.push(child);
+            origin = rest;
+            let _ = match rest[0] {
+                GedLine::Data(clvl, _, _) | GedLine::Ref(clvl, _, _) => {
+                    if clvl <= lvl {
+                        break;
                     }
                 }
-            })
-            .take_while(|lvl| lvl > &clevel)
-            .for_each(|_| {
-                let line = &iter.next().unwrap();
-                println!("Pushing line: '{:?}'", line);
-                children.push(line);
-            });
-        (iter.as_slice(), Some(record))
+            };
+        }
+        (origin, Some(record))
     }
 
     fn regex_line() -> Regex {
@@ -160,8 +172,7 @@ impl Parser for GedParser {
             if let None = rec {
                 break;
             }
-            println!("<-------------------------------->");
-            println!("{:#?}", rest);
+            println!("{:#?}", rec);
             slice = rest;
         }
         Ok(RecordRegistry::new())

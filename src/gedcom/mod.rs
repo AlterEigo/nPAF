@@ -96,21 +96,24 @@ impl GedParser {
         let clevel: i32 = match &origin[0] {
             GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
         };
-        let origin: &'a [GedLine] = &origin[1..];
+        let origin = &origin[1..];
         let mut children: Vec<&'a GedLine> = Vec::new();
         let mut iter = origin.iter();
         let mut record: Record = Default::default();
-        for line in origin.iter() {
-            match &line {
-                GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => {
-                    if lvl <= &clevel {
-                        break;
+        let _ = origin.iter()
+            .filter_map(|line| {
+                match &line {
+                    GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => {
+                        Some(*lvl)
                     }
-                    println!("Pushing line: '{:?}'", line);
-                    children.push(&iter.next().unwrap());
                 }
-            };
-        }
+            })
+            .take_while(|lvl| lvl > &clevel)
+            .for_each(|_| {
+                let line = &iter.next().unwrap();
+                println!("Pushing line: '{:?}'", line);
+                children.push(line);
+            });
         (iter.as_slice(), Some(record))
     }
 

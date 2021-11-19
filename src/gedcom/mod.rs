@@ -88,16 +88,30 @@ impl GedParser {
         }
     }
 
-    fn read_record<'a, Iter>(mut iter: Iter) -> (Iter, Option<RecordRef>)
-        where Iter: std::iter::Iterator<Item=&'a GedLine>
+    fn read_record<'a>(origin: &'a [GedLine]) -> (&'a [GedLine], Option<Record>)
     {
-        let level = match &iter.next() {
-            Some(GedLine::Data(lvl, _, _)) | Some(GedLine::Ref(lvl, _, _)) => lvl,
-            _ => return (iter, None)
+        if origin.is_empty() {
+            return (origin, None);
         };
-
-        println!("[read_record]: current level: '{}'", level);
-        (iter, Some(Default::default()))
+        let clevel: i32 = match &origin[0] {
+            GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => *lvl
+        };
+        let origin: &'a [GedLine] = &origin[1..];
+        let mut children: Vec<&'a GedLine> = Vec::new();
+        let mut iter = origin.iter();
+        let mut record: Record = Default::default();
+        for line in origin.iter() {
+            match &line {
+                GedLine::Data(lvl, _, _) | GedLine::Ref(lvl, _, _) => {
+                    if lvl <= &clevel {
+                        break;
+                    }
+                    println!("Pushing line: '{:?}'", line);
+                    children.push(&iter.next().unwrap());
+                }
+            };
+        }
+        (iter.as_slice(), Some(record))
     }
 
     fn regex_line() -> Regex {
@@ -137,15 +151,15 @@ impl Parser for GedParser {
             .collect();
         println!("Contents read, line count: '{}'.", contents.len());
         let mut records: Vec<RecordRef> = Vec::new();
-        let mut iter = contents.iter();
-        let mut rec: Option<RecordRef>;
+        let mut slice = contents.as_slice();
         loop {
-            let result = Self::read_record(iter);
-            iter = result.0;
-            rec = result.1;
+            let (rest, rec) = Self::read_record(slice);
             if let None = rec {
                 break;
-            };
+            }
+            println!("<-------------------------------->");
+            println!("{:#?}", rest);
+            slice = rest;
         }
         Ok(RecordRegistry::new())
     }

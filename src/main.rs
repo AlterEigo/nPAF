@@ -20,6 +20,8 @@ fn main() {
     let res = parser.parse(&data);
     if let Ok(parsed) = res {
         println!("{:#?}", parsed);
+    } else {
+        println!("An error occured: '{:#?}'", res);
     }
 }
 

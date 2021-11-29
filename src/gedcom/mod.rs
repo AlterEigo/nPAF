@@ -3,6 +3,7 @@ use std::io::{BufReader, BufRead};
 use std::fs::File;
 use std::cell::{RefMut, RefCell};
 use std::collections::HashMap;
+use unicode_bom::Bom;
 
 extern crate regex;
 use regex::Regex;
@@ -28,8 +29,10 @@ impl Into<RecordRef> for Record {
 
 type IOError = std::io::Error;
 
+#[derive(Debug)]
 pub enum ParseError {
-    IO(IOError)
+    IO(IOError),
+    Runtime(String)
 }
 
 #[derive(Debug,Clone)]
@@ -54,6 +57,27 @@ impl From<IOError> for ParseError {
 
 pub trait Parser {
     type FileType;
+
+    fn read_lines<FT>(file: FT) -> (Bom, Vec<String>)
+        where FT: std::io::Read
+    {
+        let mut reader = BufReader::new(file);
+        let mut first_line = String::new();
+        if let Err(_) = reader.read_line(&mut first_line) {
+            return (Bom::Null, vec![])
+        };
+
+        let bom: Bom = first_line.as_bytes().into();
+        let mut content: Vec<String> = match bom {
+            Bom::Null => vec![first_line],
+            _ => vec![first_line[(bom.len() - 1)..].to_owned()],
+        };
+        let mut rest: Vec<String> = reader.lines()
+            .filter_map(|x| x.ok())
+            .collect();
+        content.append(&mut rest);
+        (bom, content)
+    }
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult;
 }
@@ -160,7 +184,16 @@ impl Parser for GedParser {
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
         println!("Parsing.");
-        let reader = BufReader::new(file);
+        let mut reader = BufReader::new(file);
+        let mut contents = String::new();
+        reader.read_line(&mut contents)?;
+
+        let bom: Bom = contents.as_bytes().into();
+        match bom {
+            Bom::Utf8 => println!("Utf8 BOM found!"),
+            _ => return Err(ParseError::Runtime(std::format!("{:?}", bom)))
+        };
+
         let contents: Vec<GedLine> = reader.lines()
             .filter_map(|l| l.ok())
             .filter_map(|l| Self::parse_line(&l))

@@ -1,3 +1,6 @@
+//! This module contains all the tools needed for
+//! parsing ged files.
+
 use std::rc::Rc;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
@@ -8,10 +11,26 @@ use unicode_bom::Bom;
 extern crate regex;
 use regex::Regex;
 
+/// Smart pointer to a record. Its implemented
+/// via the combination of `Rc<RefCell<...>>` so
+/// a record could have multiple owners and to be
+/// mutable.
+/// > Dunno how to use it yet tho :/
 pub type RecordRef = Rc<RefCell<Record>>;
+
+/// Structure that contains all the records and
+/// assigns each and every one a unique hash, so
+/// it could be accessed directly without the need
+/// of iterating through the whole record tree.
 pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
+
+/// Standard result alias
 pub type ParseResult = Result<RecordRegistry, ParseError>;
 
+/// Main record tree node containing all the data
+/// about a person or a GED data chunk.
+/// > Don't know yet what it has to contain,
+/// > so it's under heavy developpment.
 #[derive(Default,Debug,Clone)]
 pub struct Record {
     pub id: u64,
@@ -21,20 +40,32 @@ pub struct Record {
     pub children: Vec<Rc<RefCell<Record>>>
 }
 
+/// Converter from `Record` to `RecordRef`.
+/// Allows to crate smart pointers with a
+/// call to `Record::into::<RecordRef>()`
 impl Into<RecordRef> for Record {
     fn into(self) -> RecordRef {
         Rc::new(RefCell::new(self))
     }
 }
 
+/// Convenient alias for `std::io::Error`
 type IOError = std::io::Error;
 
+/// Module's error convenient wrapper
 #[derive(Debug)]
 pub enum ParseError {
     IO(IOError),
     Runtime(String)
 }
 
+/// An enumeration that grants the interpretation
+/// of a GED data line. Mainly used while parsing
+/// the GED file. Allows to quickly access the level
+/// of a line and/or its tag with associated data (if any)
+/// without the need of mandatory parsing.
+/// > This should become a fully qualified data
+/// > structure with a type associated to it.
 #[derive(Debug,Clone)]
 enum GedLine {
     Data(i32, String, Option<String>),
@@ -42,6 +73,11 @@ enum GedLine {
 }
 
 impl GedLine {
+    /// Helper function that returns the line's
+    /// record level directly, without the need
+    /// of matching the enum manually.
+    /// > The enum may become a struct in the future so
+    /// > this function might disappear as well.
     fn level(&self) -> i32 {
         match &self {
             Self::Data(lvl, _, _) | Self::Ref(lvl, _, _) => *lvl
@@ -49,18 +85,22 @@ impl GedLine {
     }
 }
 
+/// Convenient converter from [IOError](std::io::Error) for
+/// [ParseError](ParseError)
 impl From<IOError> for ParseError {
     fn from(o: IOError) -> ParseError {
         ParseError::IO(o)
     }
 }
 
+/// Generic trait made to represent any entity capable of
+/// parsing a file to transform it into a [record tree](RecordRegistry)
 pub trait Parser {
     type FileType;
 
-    fn read_lines<FT>(file: FT) -> (Bom, Vec<String>)
-        where FT: std::io::Read
-    {
+    /// This method reads a file, extracts a BOM mark if
+    /// it finds one and returns the file contents
+    fn read_lines(file: &std::fs::File) -> (Bom, Vec<String>) {
         let mut reader = BufReader::new(file);
         let mut first_line = String::new();
         if let Err(_) = reader.read_line(&mut first_line) {
@@ -79,15 +119,22 @@ pub trait Parser {
         (bom, content)
     }
 
+    /// Main parsing method that all the descendants have to
+    /// implement
     fn parse(&mut self, file: &Self::FileType) -> ParseResult;
 }
 
+/// Specialized structure for GED parser containing
+/// all the data associated to the parser
 #[derive(Default)]
 pub struct GedParser {
 
 }
 
 impl GedParser {
+
+    /// Method allowing to count all the lines that can't
+    /// be parsed by the `parse` method.
     pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
         let reader = BufReader::new(file);
         let re = GedParser::regex_line();
@@ -99,6 +146,8 @@ impl GedParser {
             .fold(0, |acc, _l| acc + 1)
     }
 
+    /// Private subroutine that takes a raw string and
+    /// parses it into an interpreted line with data
     fn parse_line(line: &str) -> Option<GedLine> {
         let r_data = Self::regex_line();
         let r_ref = Self::regex_ref();
@@ -120,6 +169,9 @@ impl GedParser {
         }
     }
 
+    /// Reading a collection of lines and recursively transform
+    /// it into a data record, unifying multiple lines into one
+    /// logical entity
     fn read_record<'a>(origin: &'a [GedLine]) -> (&'a [GedLine], Option<Record>)
     {
         match origin.len() {
@@ -154,6 +206,7 @@ impl GedParser {
         (origin, Some(record))
     }
 
+    /// Line regular expression getter
     fn regex_line() -> Regex {
         Regex::new(r"(?x) # Insignificant whitespace mode
                 ^
@@ -164,6 +217,7 @@ impl GedParser {
             ").unwrap()
     }
 
+    /// Reference regular expression getter
     fn regex_ref() -> Regex {
         Regex::new(r"(?x)
                 ^
@@ -184,18 +238,8 @@ impl Parser for GedParser {
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
         println!("Parsing.");
-        let mut reader = BufReader::new(file);
-        let mut contents = String::new();
-        reader.read_line(&mut contents)?;
-
-        let bom: Bom = contents.as_bytes().into();
-        match bom {
-            Bom::Utf8 => println!("Utf8 BOM found!"),
-            _ => return Err(ParseError::Runtime(std::format!("{:?}", bom)))
-        };
-
-        let contents: Vec<GedLine> = reader.lines()
-            .filter_map(|l| l.ok())
+        let (_, contents) = Self::read_lines(file);
+        let contents: Vec<GedLine> = contents.iter()
             .filter_map(|l| Self::parse_line(&l))
             .collect();
         println!("Contents read, line count: '{}'.", contents.len());

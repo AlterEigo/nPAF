@@ -43,7 +43,7 @@ pub struct Record {
 }
 
 trait NdfaState {
-    fn advance<'a>(self, line: &'a GedLine) -> Box<dyn NdfaState>;
+    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState>;
 
     fn is_final(&self) -> bool {
         return false;
@@ -77,12 +77,12 @@ struct FailedState {
 }
 
 impl NdfaState for TagState {
-    fn advance<'a>(mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
+    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
         if let GedLine::Data(lvl, tag, _) = line {
 
             if *lvl < self.level {
                 return Box::new(ReferenceState {
-                    model: self.model
+                    model: self.model.clone()
                 })
             }
 
@@ -92,7 +92,10 @@ impl NdfaState for TagState {
                         ..Default::default()
                     })
                 }
-                return Box::new(self);
+                return Box::new(TagState {
+                    model: self.model.clone(),
+                    level: self.level
+                });
             }
 
             if *lvl == self.level + 1 {
@@ -104,7 +107,7 @@ impl NdfaState for TagState {
                 }
                 self.model.push(rec);
                 return Box::new(TagState {
-                    model: self.model,
+                    model: self.model.clone(),
                     level: self.level + 1
                 })
             }
@@ -126,7 +129,7 @@ impl NdfaState for TagState {
 }
 
 impl NdfaState for ReferenceState {
-    fn advance<'a>(mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
+    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
         if let GedLine::Ref(lvl, rid, None) = line {
             if *lvl == 0 {
                 let rec: Record = Record {
@@ -134,7 +137,7 @@ impl NdfaState for ReferenceState {
                 };
                 self.model.push(rec);
                 return Box::new(TagState {
-                    model: self.model,
+                    model: self.model.clone(),
                     level: 1
                 });
             }
@@ -156,7 +159,7 @@ impl NdfaState for ReferenceState {
 }
 
 impl NdfaState for EntryState {
-    fn advance<'a>(mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
+    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
         if let GedLine::Data(lvl, tag, None) = line {
             if *lvl == 0 && *tag == "HEAD" {
                 return Box::new(TagState {
@@ -182,8 +185,8 @@ impl NdfaState for EntryState {
 }
 
 impl NdfaState for FailedState {
-    fn advance<'a>(mut self, _: &'a GedLine) -> Box<dyn NdfaState> {
-        Box::new(self)
+    fn advance<'a>(&mut self, _: &'a GedLine) -> Box<dyn NdfaState> {
+        Box::new(FailedState {})
     }
 
     fn is_final(&self) -> bool {
@@ -292,6 +295,47 @@ pub struct GedParser {
 
 impl GedParser {
 
+    fn classic_parse(&mut self, file: &std::fs::File) -> ParseResult {
+        println!("Parsing.");
+        let (_, contents) = Self::read_lines(file);
+        let contents: Vec<GedLine> = contents.iter()
+            .filter_map(|l| Self::parse_line(&l))
+            .collect();
+        println!("Contents read, line count: '{}'.", contents.len());
+        let mut records: Vec<RecordRef> = Vec::new();
+        let mut slice = contents.as_slice();
+        loop {
+            let (rest, rec) = Self::read_record(slice);
+            if let None = rec {
+                break;
+            }
+            println!("{:#?}", rec);
+            slice = rest;
+        }
+        Ok(RecordRegistry::new())
+    }
+
+    fn ndfa_parse(&mut self, file: &std::fs::File) -> ParseResult {
+        let reader = BufReader::new(file);
+        let content: Vec<GedLine> = reader.lines().into_iter()
+            .filter_map(|x| x.ok())
+            .filter_map(|x| GedParser::parse_line(&x))
+            .collect();
+        let mut state: Box<dyn NdfaState> = Box::new(EntryState::default());
+        for line in content.iter() {
+            state = state.advance(line);
+            if state.is_final() && !state.success() {
+                break;
+            }
+        };
+        if state.is_final() && state.success() {
+            println!("Successfully parsed!");
+        } else {
+            println!("Something did not parse correctly.");
+        }
+        Err(ParseError::Runtime("Not implemented.".to_string()))
+    }
+
     /// Method allowing to count all the lines that can't
     /// be parsed by the `parse` method.
     pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
@@ -397,23 +441,7 @@ impl Parser for GedParser {
     type FileType = std::fs::File;
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
-        println!("Parsing.");
-        let (_, contents) = Self::read_lines(file);
-        let contents: Vec<GedLine> = contents.iter()
-            .filter_map(|l| Self::parse_line(&l))
-            .collect();
-        println!("Contents read, line count: '{}'.", contents.len());
-        let mut records: Vec<RecordRef> = Vec::new();
-        let mut slice = contents.as_slice();
-        loop {
-            let (rest, rec) = Self::read_record(slice);
-            if let None = rec {
-                break;
-            }
-            println!("{:#?}", rec);
-            slice = rest;
-        }
-        Ok(RecordRegistry::new())
+        self.ndfa_parse(file)
     }
 }
 

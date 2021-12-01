@@ -24,6 +24,8 @@ pub type RecordRef = Rc<RefCell<Record>>;
 /// of iterating through the whole record tree.
 pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
 
+pub type RecordVec = Vec<Record>;
+
 /// Standard result alias
 pub type ParseResult = Result<RecordRegistry, ParseError>;
 
@@ -38,6 +40,163 @@ pub struct Record {
     pub father: Option<Rc<RefCell<Record>>>,
     pub mother: Option<Rc<RefCell<Record>>>,
     pub children: Vec<Rc<RefCell<Record>>>
+}
+
+trait NdfaState {
+    fn advance<'a>(self, line: &'a GedLine) -> Box<dyn NdfaState>;
+
+    fn is_final(&self) -> bool {
+        return false;
+    }
+
+    fn success(&self) -> bool {
+        return false;
+    }
+
+    fn fold(self) -> RecordVec;
+}
+
+#[derive(Default,Debug,Clone)]
+struct EntryState {
+    model: RecordVec,
+}
+
+#[derive(Default,Debug,Clone)]
+struct ReferenceState {
+    model: RecordVec
+}
+
+#[derive(Default,Debug,Clone)]
+struct TagState {
+    model: RecordVec,
+    level: i32
+}
+
+#[derive(Default,Debug,Clone)]
+struct FailedState {
+}
+
+impl NdfaState for TagState {
+    fn advance<'a>(mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
+        if let GedLine::Data(lvl, tag, _) = line {
+
+            if *lvl < self.level {
+                return Box::new(ReferenceState {
+                    model: self.model
+                })
+            }
+
+            if *lvl == self.level {
+                match tag {
+                    _ => self.model.push(Record {
+                        ..Default::default()
+                    })
+                }
+                return Box::new(self);
+            }
+
+            if *lvl == self.level + 1 {
+                let mut rec: Record = self.model.pop().unwrap();
+                match tag {
+                    _ => rec.children.push(Record {
+                        ..Default::default()
+                    }.into())
+                }
+                self.model.push(rec);
+                return Box::new(TagState {
+                    model: self.model,
+                    level: self.level + 1
+                })
+            }
+        }
+        Box::new(FailedState {})
+    }
+
+    fn success(&self) -> bool {
+        true
+    }
+
+    fn is_final(&self) -> bool {
+        true
+    }
+
+    fn fold(self) -> RecordVec {
+        self.model
+    }
+}
+
+impl NdfaState for ReferenceState {
+    fn advance<'a>(mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
+        if let GedLine::Ref(lvl, rid, None) = line {
+            if *lvl == 0 {
+                let rec: Record = Record {
+                    ..Default::default()
+                };
+                self.model.push(rec);
+                return Box::new(TagState {
+                    model: self.model,
+                    level: 1
+                });
+            }
+        }
+        Box::new(FailedState {})
+    }
+
+    fn success(&self) -> bool {
+        false
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+
+    fn fold(self) -> RecordVec {
+        self.model
+    }
+}
+
+impl NdfaState for EntryState {
+    fn advance<'a>(mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
+        if let GedLine::Data(lvl, tag, None) = line {
+            if *lvl == 0 && *tag == "HEAD" {
+                return Box::new(TagState {
+                    model: Default::default(),
+                    level: 1
+                });
+            }
+        }
+        Box::new(FailedState {})
+    }
+
+    fn success(&self) -> bool {
+        false
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+
+    fn fold(self) -> RecordVec {
+        Default::default()
+    }
+}
+
+impl NdfaState for FailedState {
+    fn advance<'a>(mut self, _: &'a GedLine) -> Box<dyn NdfaState> {
+        Box::new(self)
+    }
+
+    fn is_final(&self) -> bool {
+        true
+    }
+
+    fn success(&self) -> bool {
+        false
+    }
+
+    fn fold(self) -> RecordVec {
+        Default::default()
+    }
 }
 
 /// Converter from `Record` to `RecordRef`.
@@ -229,6 +388,7 @@ impl GedParser {
     }
 }
 
+/// 
 impl Buildable for GedParser {
     type BuilderType = GedParserBuilder;
 }

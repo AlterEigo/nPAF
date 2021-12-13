@@ -3,6 +3,7 @@ mod person_editor;
 mod prelude;
 mod root;
 mod gedcom;
+mod gedex;
 
 use crate::prelude::*;
 use gtk::prelude::*;

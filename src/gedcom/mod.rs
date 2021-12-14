@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use unicode_bom::Bom;
 
 extern crate regex;
+pub mod gedex;
 use regex::Regex;
 
 /// Smart pointer to a record. Its implemented

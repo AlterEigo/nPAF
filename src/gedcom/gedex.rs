@@ -1,34 +1,57 @@
 use crate::gedcom::{GedLine,Record,ParseError};
 
+type Predicate = dyn Fn(&GedLine) -> bool;
+
 enum State {
     Initial,
-    Reference(Record),
-    RecordTag(Record),
+    Reference(Vec<Record>),
+    RecordTag(Vec<Record>),
     Invalid
 }
 
 impl State {
     fn handle_initial(line: &GedLine) -> Self {
-        Default::default()
+        let cond: &Predicate = &|line| {
+            false
+        };
+        if cond(line) {
+            Self::Reference(Default::default())
+        } else {
+            Self::Invalid
+        }
     }
 
-    fn handle_ref(rec: Record, line: &GedLine) -> Self {
-        Default::default()
+    fn handle_ref(recs: Vec<Record>, line: &GedLine) -> Self {
+        let cond: &Predicate = &|line| {
+            false
+        };
+        if cond(line) {
+            Self::RecordTag(recs)
+        } else {
+            Self::Invalid
+        }
     }
 
-    fn handle_tag(rec: Record, line: &GedLine) -> Self {
-        Default::default()
+    fn handle_tag(recs: Vec<Record>, line: &GedLine) -> Self {
+        let cond: &Predicate = &|line| {
+            false
+        };
+        if cond(line) {
+            Self::RecordTag(recs)
+        } else {
+            Self::Invalid
+        }
     }
 
     fn handle_invalid(line: &GedLine) -> Self {
-        Default::default()
+        Self::Invalid
     }
 
     pub fn next(self, line: &GedLine) -> Self {
         match self {
             Self::Initial => Self::handle_initial(line),
-            Self::Reference(rec) => Self::handle_ref(rec, line),
-            Self::RecordTag(rec) => Self::handle_tag(rec, line),
+            Self::Reference(recs) => Self::handle_ref(recs, line),
+            Self::RecordTag(recs) => Self::handle_tag(recs, line),
             Self::Invalid => Self::handle_invalid(line)
         }
     }

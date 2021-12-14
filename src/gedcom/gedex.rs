@@ -2,8 +2,8 @@ use crate::gedcom::{GedLine,Record,ParseError};
 
 enum State {
     Initial,
-    Reference,
-    RecordTag,
+    Reference(Record),
+    RecordTag(Record),
     Invalid
 }
 
@@ -12,11 +12,11 @@ impl State {
         Default::default()
     }
 
-    fn handle_ref(line: &GedLine) -> Self {
+    fn handle_ref(rec: Record, line: &GedLine) -> Self {
         Default::default()
     }
 
-    fn handle_tag(line: &GedLine) -> Self {
+    fn handle_tag(rec: Record, line: &GedLine) -> Self {
         Default::default()
     }
 
@@ -25,26 +25,25 @@ impl State {
     }
 
     pub fn next(self, line: &GedLine) -> Self {
-        let func: &dyn Fn(&GedLine) -> State = match self {
-            Self::Initial => &Self::handle_initial,
-            Self::Reference => &Self::handle_ref,
-            Self::RecordTag => &Self::handle_tag,
-            Self::Invalid => &Self::handle_invalid
-        };
-        func(line)
+        match self {
+            Self::Initial => Self::handle_initial(line),
+            Self::Reference(rec) => Self::handle_ref(rec, line),
+            Self::RecordTag(rec) => Self::handle_tag(rec, line),
+            Self::Invalid => Self::handle_invalid(line)
+        }
     }
 
     pub fn can_advance(&self) -> bool {
         match self {
-            Self::Initial | Self::Reference | Self::RecordTag => true,
+            Self::Initial | Self::Reference(_) | Self::RecordTag(_) => true,
             Self::Invalid => false
         }
     }
 
     pub fn successful(&self) -> bool {
         match self {
-            Self::Initial | Self::Reference | Self::Invalid => false,
-            Self::RecordTag => true
+            Self::Initial | Self::Reference(_) | Self::Invalid => false,
+            Self::RecordTag(_) => true
         }
     }
 }

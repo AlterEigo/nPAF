@@ -6,6 +6,22 @@ use regex::Regex;
 
 type Predicate = dyn Fn(&GedLine) -> bool;
 
+#[derive(Default,Clone,Debug)]
+struct Tag {
+    name: String,
+    content: String,
+    nested: Vec<Tag>
+}
+
+impl Tag {
+    fn nest(self, child: Tag) -> Self {
+        Self {
+            nested: [&self.nested[..], &[child]].concat(),
+            ..self
+        }
+    }
+}
+
 enum State {
     Initial,
     Reference {records: Vec<Record>},

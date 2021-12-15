@@ -26,6 +26,7 @@ pub type RecordRef = Rc<RefCell<Record>>;
 pub type RecordRegistry = HashMap<u64, Rc<RefCell<Record>>>;
 
 pub type RecordVec = Vec<Record>;
+pub type RecordRc = Rc<RefCell<Record>>;
 
 /// Standard result alias
 pub type ParseResult = Result<RecordRegistry, ParseError>;
@@ -39,9 +40,9 @@ pub struct Record {
     pub rtype: String,
     pub id: u64,
     pub name: String,
-    pub father: Option<Rc<RefCell<Record>>>,
-    pub mother: Option<Rc<RefCell<Record>>>,
-    pub children: Vec<Rc<RefCell<Record>>>
+    pub father: Option<RecordRc>,
+    pub mother: Option<RecordRc>,
+    pub children: Vec<RecordRc>
 }
 
 /// Converter from `Record` to `RecordRef`.
@@ -136,126 +137,11 @@ pub struct GedParser {
 }
 
 impl GedParser {
-
     fn classic_parse(&mut self, file: &std::fs::File) -> ParseResult {
-        println!("Parsing.");
-        let (_, contents) = Self::read_lines(file);
-        let contents: Vec<GedLine> = contents.iter()
-            .filter_map(|l| Self::parse_line(&l))
-            .collect();
-        println!("Contents read, line count: '{}'.", contents.len());
-        let mut records: Vec<RecordRef> = Vec::new();
-        let mut slice = contents.as_slice();
-        loop {
-            let (rest, rec) = Self::read_record(slice);
-            if let None = rec {
-                break;
-            }
-            println!("{:#?}", rec);
-            slice = rest;
-        }
-        Ok(RecordRegistry::new())
-    }
-
-    /// Method allowing to count all the lines that can't
-    /// be parsed by the `parse` method.
-    pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
-        let reader = BufReader::new(file);
-        let re = GedParser::regex_line();
-        let re_ref = GedParser::regex_ref();
-        reader.lines()
-            .filter_map(|l| l.ok())
-            .filter(|l| !re.is_match(&l) && !re_ref.is_match(&l))
-            .inspect(|l| println!("Unmatched: '{}'", l))
-            .fold(0, |acc, _l| acc + 1)
-    }
-
-    /// Private subroutine that takes a raw string and
-    /// parses it into an interpreted line with data
-    fn parse_line(line: &str) -> Option<GedLine> {
-        let r_data = Self::regex_line();
-        let r_ref = Self::regex_ref();
-
-        if let Some(caps) = r_data.captures(&line) {
-            Some(GedLine::Data(
-                caps.name("Level").unwrap().as_str().parse().unwrap(),
-                caps.name("Tag").unwrap().as_str().to_owned(),
-                caps.name("Content").map(|s| s.as_str().to_owned())
-            ))
-        } else if let Some(caps) = r_ref.captures(&line) {
-            Some(GedLine::Ref(
-                caps.name("Level").unwrap().as_str().parse().unwrap(),
-                caps.name("Type").unwrap().as_str().to_owned(),
-                caps.name("Number").unwrap().as_str().parse().unwrap(),
-                caps.name("Content").map(|s| s.as_str().to_owned())
-                // if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
-            ))
-        } else {
-            None
-        }
-    }
-
-    /// Reading a collection of lines and recursively transform
-    /// it into a data record, unifying multiple lines into one
-    /// logical entity
-    fn read_record<'a>(origin: &'a [GedLine]) -> (&'a [GedLine], Option<Record>)
-    {
-        match origin.len() {
-            0 => return (origin, None),
-            1 => return (&origin[1..], Some(Default::default())),
-            _ => ()
-        };
-        let lvl: Vec<i32> = origin[..2]
-            .into_iter()
-            .map(|val| val.level())
-            .collect();
-        if lvl[1] <= lvl[0] {
-            return (&origin[1..], Some(Default::default()))
-        }
-        let lvl = lvl[0];
-        let mut origin = &origin[1..];
-        let mut record: Record = Default::default();
-
-        let mut nlevel = if !origin.is_empty() { origin[0].level() } else { 0 };
-        while !origin.is_empty() && nlevel > lvl {
-            let (rest, child) = Self::read_record(origin);
-            if let None = child {
-                break;
-            }
-            let child = child
-                .map(|val| Rc::new(RefCell::new(val)))
-                .unwrap();
-            record.children.push(child);
-            origin = rest;
-            nlevel = if !origin.is_empty() { origin[0].level() } else { 0 };
-        }
-        (origin, Some(record))
-    }
-
-    /// Line regular expression getter
-    fn regex_line() -> Regex {
-        Regex::new(r"(?x) # Insignificant whitespace mode
-                ^
-                (?P<Level>[0-9]{1,2})\ *       # Line level
-                (?P<Tag>_?[A-Z]{3,5})\ *       # Record tag
-                (?P<Content>[^\r\n]+)*         # Either end of line or content
-                $
-            ").unwrap()
-    }
-
-    /// Reference regular expression getter
-    fn regex_ref() -> Regex {
-        Regex::new(r"(?x)
-                ^
-                (?P<Level>[0-9]{1,2})\ *               # Line level
-                @(?P<Type>[A-Z]+)(?P<Number>\d+)@\ *   # Record tag
-                (?P<Content>[^\r\n]+)?                 # Either end of line or content
-                $
-            ").unwrap()
+        Err(ParseError::Runtime(String::from("Not implemented.")))
     }
 }
 
-/// 
 impl Buildable for GedParser {
     type BuilderType = GedParserBuilder;
 }

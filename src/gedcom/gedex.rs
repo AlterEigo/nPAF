@@ -1,4 +1,8 @@
 use crate::gedcom::{GedLine,Record,ParseError};
+use std::io::{BufReader, BufRead};
+
+extern crate regex;
+use regex::Regex;
 
 type Predicate = dyn Fn(&GedLine) -> bool;
 
@@ -124,5 +128,65 @@ impl<'a> GedEx<'a> {
             })
             .fold()?;
         Ok(records)
+    }
+
+    /// Method allowing to count all the lines that can't
+    /// be parsed by the `parse` method.
+    pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
+        let reader = BufReader::new(file);
+        let re = Self::regex_line();
+        let re_ref = Self::regex_ref();
+        reader.lines()
+            .filter_map(|l| l.ok())
+            .filter(|l| !re.is_match(&l) && !re_ref.is_match(&l))
+            .inspect(|l| println!("Unmatched: '{}'", l))
+            .fold(0, |acc, _l| acc + 1)
+    }
+
+    /// Private subroutine that takes a raw string and
+    /// parses it into an interpreted line with data
+    fn parse_line(line: &str) -> Option<GedLine> {
+        let r_data = Self::regex_line();
+        let r_ref = Self::regex_ref();
+
+        if let Some(caps) = r_data.captures(&line) {
+            Some(GedLine::Data(
+                caps.name("Level").unwrap().as_str().parse().unwrap(),
+                caps.name("Tag").unwrap().as_str().to_owned(),
+                caps.name("Content").map(|s| s.as_str().to_owned())
+            ))
+        } else if let Some(caps) = r_ref.captures(&line) {
+            Some(GedLine::Ref(
+                caps.name("Level").unwrap().as_str().parse().unwrap(),
+                caps.name("Type").unwrap().as_str().to_owned(),
+                caps.name("Number").unwrap().as_str().parse().unwrap(),
+                caps.name("Content").map(|s| s.as_str().to_owned())
+                // if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
+            ))
+        } else {
+            None
+        }
+    }
+
+    /// Line regular expression getter
+    fn regex_line() -> Regex {
+        Regex::new(r"(?x) # Insignificant whitespace mode
+                ^
+                (?P<Level>[0-9]{1,2})\ *       # Line level
+                (?P<Tag>_?[A-Z]{3,5})\ *       # Record tag
+                (?P<Content>[^\r\n]+)*         # Either end of line or content
+                $
+            ").unwrap()
+    }
+
+    /// Reference regular expression getter
+    fn regex_ref() -> Regex {
+        Regex::new(r"(?x)
+                ^
+                (?P<Level>[0-9]{1,2})\ *               # Line level
+                @(?P<Type>[A-Z]+)(?P<Number>\d+)@\ *   # Record tag
+                (?P<Content>[^\r\n]+)?                 # Either end of line or content
+                $
+            ").unwrap()
     }
 }

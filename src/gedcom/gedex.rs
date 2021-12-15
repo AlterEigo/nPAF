@@ -42,16 +42,6 @@ impl State {
             }
         };
         if cond(&line) {
-            let (rtype, number): (String, u64) = match line {
-                GedLine::Ref(_, rtype, number, _) => (rtype, number),
-                _ => panic!("Unexpected ged line type.")
-            };
-            let nrec = Record {
-                rtype: rtype,
-                id: number,
-                ..Default::default()
-            };
-            recs.push(nrec);
             Self::RecordTag {records: recs, level: 1}
         } else {
             Self::Invalid
@@ -62,7 +52,16 @@ impl State {
         match line {
             GedLine::Ref(nlvl, _, _, _) => {
                 if nlvl == 0 {
-                    Self::RecordTag {records: recs, level: 1}
+                    let (rtype, number): (String, u64) = match line {
+                        GedLine::Ref(_, rtype, number, _) => (rtype, number),
+                        _ => panic!("Unexpected ged line type.")
+                    };
+                    let nrec = Record {
+                        rtype: rtype,
+                        id: number,
+                        ..Default::default()
+                    };
+                    Self::RecordTag {records: [&recs[..], &[nrec]].concat(), level: 1}
                 } else {
                     Self::Invalid
                 }

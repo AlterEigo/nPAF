@@ -96,14 +96,14 @@ pub struct GedEx<'a> {
 }
 
 impl<'a> GedEx<'a> {
-    pub fn new(contents: Vec<&'a GedLine>) -> Self {
+    fn new(contents: Vec<&'a GedLine>) -> Self {
         GedEx {
             contents: contents,
             ..Default::default()
         }
     }
 
-    pub fn fold(self) -> Result<Vec<Record>, ParseError> {
+    fn fold(self) -> Result<Vec<Record>, ParseError> {
         Ok(self.records)
     }
 }

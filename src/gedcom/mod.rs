@@ -131,7 +131,7 @@ impl NdfaState for TagState {
 
 impl NdfaState for ReferenceState {
     fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
-        if let GedLine::Ref(lvl, rid, None) = line {
+        if let GedLine::Ref(lvl, rtype, rid, None) = line {
             if *lvl == 0 {
                 let rec: Record = Record {
                     ..Default::default()
@@ -232,7 +232,7 @@ pub enum ParseError {
 #[derive(Debug,Clone)]
 enum GedLine {
     Data(i32, String, Option<String>),
-    Ref(i32, String, Option<String>)
+    Ref(i32, String, u64, Option<String>)
 }
 
 impl GedLine {
@@ -243,7 +243,7 @@ impl GedLine {
     /// > this function might disappear as well.
     fn level(&self) -> i32 {
         match &self {
-            Self::Data(lvl, _, _) | Self::Ref(lvl, _, _) => *lvl
+            Self::Data(lvl, _, _) | Self::Ref(lvl, _, _, _) => *lvl
         }
     }
 }
@@ -360,13 +360,15 @@ impl GedParser {
             Some(GedLine::Data(
                 caps.name("Level").unwrap().as_str().parse().unwrap(),
                 caps.name("Tag").unwrap().as_str().to_owned(),
-                if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
+                caps.name("Content").map(|s| s.as_str().to_owned())
             ))
         } else if let Some(caps) = r_ref.captures(&line) {
             Some(GedLine::Ref(
                 caps.name("Level").unwrap().as_str().parse().unwrap(),
-                caps.name("Tag").unwrap().as_str().to_owned(),
-                if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
+                caps.name("Type").unwrap().as_str().to_owned(),
+                caps.name("Number").unwrap().as_str().parse().unwrap(),
+                caps.name("Content").map(|s| s.as_str().to_owned())
+                // if let Some(content) = caps.name("Content") { Some(content.as_str().to_owned()) } else { None }
             ))
         } else {
             None
@@ -425,9 +427,9 @@ impl GedParser {
     fn regex_ref() -> Regex {
         Regex::new(r"(?x)
                 ^
-                (?P<Level>[0-9]{1,2})\ *           # Line level
-                @(?P<Tag>[A-Z]+\d+)@\ *            # Record tag
-                (?P<Content>[^\r\n]+)?             # Either end of line or content
+                (?P<Level>[0-9]{1,2})\ *               # Line level
+                @(?P<Type>[A-Z]+)(?P<Number>\d+)@\ *   # Record tag
+                (?P<Content>[^\r\n]+)?                 # Either end of line or content
                 $
             ").unwrap()
     }

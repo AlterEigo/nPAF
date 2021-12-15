@@ -45,13 +45,21 @@ impl State {
     }
 
     fn handle_tag(recs: Vec<Record>, lvl: i32, line: &GedLine) -> Self {
-        let cond: &Predicate = &|line| {
-            false
-        };
-        if cond(line) {
-            Self::RecordTag {records: recs, level: lvl}
-        } else {
-            Self::Invalid
+        match line {
+            GedLine::Ref(nlvl, _, _, _) => {
+                if *nlvl == 0 {
+                    Self::RecordTag {records: recs, level: 1}
+                } else {
+                    Self::Invalid
+                }
+            },
+            GedLine::Data(nlvl, _, _) => {
+                if *nlvl == (lvl + 1) || *nlvl == lvl {
+                    Self::RecordTag {records: recs, level: *nlvl}
+                } else {
+                    Self::Invalid
+                }
+            }
         }
     }
 
@@ -98,9 +106,7 @@ impl Default for State {
 
 #[derive(Default)]
 pub struct GedEx<'a> {
-    state: State,
-    contents: Vec<&'a GedLine>,
-    records: Vec<Record>
+    contents: Vec<&'a GedLine>
 }
 
 impl<'a> GedEx<'a> {
@@ -111,7 +117,12 @@ impl<'a> GedEx<'a> {
         }
     }
 
-    fn fold(self) -> Result<Vec<Record>, ParseError> {
-        Ok(self.records)
+    fn parse(self) -> Result<Vec<Record>, ParseError> {
+        let records = self.contents.into_iter()
+            .fold(State::Initial, |state, line| {
+                state.next(line)
+            })
+            .fold()?;
+        Ok(records)
     }
 }

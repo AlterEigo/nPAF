@@ -109,12 +109,12 @@ impl Default for State {
 }
 
 #[derive(Default)]
-pub struct GedEx<'a> {
-    contents: Vec<&'a GedLine>
+pub struct GedEx {
+    contents: Vec<String>
 }
 
-impl<'a> GedEx<'a> {
-    fn new(contents: Vec<&'a GedLine>) -> Self {
+impl GedEx {
+    fn new(contents: Vec<String>) -> Self {
         GedEx {
             contents: contents,
             ..Default::default()
@@ -123,8 +123,9 @@ impl<'a> GedEx<'a> {
 
     fn parse(self) -> Result<Vec<Record>, ParseError> {
         let records = self.contents.into_iter()
+            .filter_map(|line| Self::parse_line(&line))
             .fold(State::Initial, |state, line| {
-                state.next(line)
+                state.next(&line)
             })
             .fold()?;
         Ok(records)

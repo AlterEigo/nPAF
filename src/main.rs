@@ -12,7 +12,7 @@ use gedcom::*;
 fn main() {
     let mut parser: GedParser = Default::default();
     let data = std::fs::File::open("data_sample.ged").unwrap();
-    let unparsed = parser.count_unparsed(&data);
+    let unparsed = gedcom::gedex::GedEx::count_unparsed(&data);
     let data = std::fs::File::open("data_sample.ged").unwrap();
     if unparsed > 0 {
         println!("Did not parse exactly {} lines.", unparsed);

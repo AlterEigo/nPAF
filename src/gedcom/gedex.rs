@@ -4,8 +4,8 @@ type Predicate = dyn Fn(&GedLine) -> bool;
 
 enum State {
     Initial,
-    Reference(Vec<Record>),
-    RecordTag(Vec<Record>),
+    Reference {records: Vec<Record>},
+    RecordTag {records: Vec<Record>, level: i32},
     Invalid
 }
 
@@ -19,7 +19,7 @@ impl State {
             }
         };
         if cond(line) {
-            Self::Reference(Default::default())
+            Self::Reference {records: Default::default()}
         } else {
             Self::Invalid
         }
@@ -27,21 +27,29 @@ impl State {
 
     fn handle_ref(recs: Vec<Record>, line: &GedLine) -> Self {
         let cond: &Predicate = &|line| {
-            false
+            if let GedLine::Ref(lvl, _, _, _) = line {
+                if *lvl == 0 {
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
         };
         if cond(line) {
-            Self::RecordTag(recs)
+            Self::RecordTag {records: recs, level: 1}
         } else {
             Self::Invalid
         }
     }
 
-    fn handle_tag(recs: Vec<Record>, line: &GedLine) -> Self {
+    fn handle_tag(recs: Vec<Record>, lvl: i32, line: &GedLine) -> Self {
         let cond: &Predicate = &|line| {
             false
         };
         if cond(line) {
-            Self::RecordTag(recs)
+            Self::RecordTag {records: recs, level: lvl}
         } else {
             Self::Invalid
         }
@@ -54,30 +62,30 @@ impl State {
     pub fn next(self, line: &GedLine) -> Self {
         match self {
             Self::Initial => Self::handle_initial(line),
-            Self::Reference(recs) => Self::handle_ref(recs, line),
-            Self::RecordTag(recs) => Self::handle_tag(recs, line),
+            Self::Reference {records} => Self::handle_ref(records, line),
+            Self::RecordTag {records, level} => Self::handle_tag(records, level, line),
             Self::Invalid => Self::handle_invalid(line)
         }
     }
 
     pub fn can_advance(&self) -> bool {
         match self {
-            Self::Initial | Self::Reference(_) | Self::RecordTag(_) => true,
+            Self::Initial | Self::Reference {..} | Self::RecordTag {..} => true,
             Self::Invalid => false
         }
     }
 
     pub fn successful(&self) -> bool {
         match self {
-            Self::Initial | Self::Reference(_) | Self::Invalid => false,
-            Self::RecordTag(_) => true
+            Self::Initial | Self::Reference {..} | Self::Invalid => false,
+            Self::RecordTag {..} => true
         }
     }
 
     pub fn fold(self) -> Result<Vec<Record>, ParseError> {
         match self {
             Self::Initial | Self::Invalid => Err(ParseError::Runtime(String::from("Not GEDCOM data."))),
-            Self::Reference(recs) | Self::RecordTag(recs) => Ok(recs)
+            Self::Reference {records} | Self::RecordTag {records, ..} => Ok(records)
         }
     }
 }

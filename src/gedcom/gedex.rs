@@ -14,7 +14,7 @@ enum State {
 }
 
 impl State {
-    fn handle_initial(line: &GedLine) -> Self {
+    fn handle_initial(line: GedLine) -> Self {
         let cond: &Predicate = &|line| {
             let s = String::from("HEAD");
             match line {
@@ -22,14 +22,14 @@ impl State {
                 _ => false
             }
         };
-        if cond(line) {
+        if cond(&line) {
             Self::Reference {records: Default::default()}
         } else {
             Self::Invalid
         }
     }
 
-    fn handle_ref(mut recs: Vec<Record>, line: &GedLine) -> Self {
+    fn handle_ref(mut recs: Vec<Record>, line: GedLine) -> Self {
         let cond: &Predicate = &|line| {
             if let GedLine::Ref(lvl, _, _, _) = line {
                 if *lvl == 0 {
@@ -41,14 +41,14 @@ impl State {
                 false
             }
         };
-        if cond(line) {
-            let (rtype, number): (&String, &u64) = match line {
+        if cond(&line) {
+            let (rtype, number): (String, u64) = match line {
                 GedLine::Ref(_, rtype, number, _) => (rtype, number),
                 _ => panic!("Unexpected ged line type.")
             };
             let nrec = Record {
-                rtype: rtype.clone(),
-                id: *number,
+                rtype: rtype,
+                id: number,
                 ..Default::default()
             };
             recs.push(nrec);
@@ -58,18 +58,18 @@ impl State {
         }
     }
 
-    fn handle_tag(recs: Vec<Record>, lvl: i32, line: &GedLine) -> Self {
+    fn handle_tag(recs: Vec<Record>, lvl: i32, line: GedLine) -> Self {
         match line {
             GedLine::Ref(nlvl, _, _, _) => {
-                if *nlvl == 0 {
+                if nlvl == 0 {
                     Self::RecordTag {records: recs, level: 1}
                 } else {
                     Self::Invalid
                 }
             },
             GedLine::Data(nlvl, _, _) => {
-                if *nlvl == (lvl + 1) || *nlvl == lvl {
-                    Self::RecordTag {records: recs, level: *nlvl}
+                if nlvl == (lvl + 1) || nlvl == lvl {
+                    Self::RecordTag {records: recs, level: nlvl}
                 } else {
                     Self::Invalid
                 }
@@ -77,11 +77,11 @@ impl State {
         }
     }
 
-    fn handle_invalid(line: &GedLine) -> Self {
+    fn handle_invalid(line: GedLine) -> Self {
         Self::Invalid
     }
 
-    pub fn next(self, line: &GedLine) -> Self {
+    pub fn next(self, line: GedLine) -> Self {
         match self {
             Self::Initial => Self::handle_initial(line),
             Self::Reference {records} => Self::handle_ref(records, line),
@@ -135,7 +135,7 @@ impl GedEx {
         let records = self.contents.into_iter()
             .filter_map(|line| Self::parse_line(&line))
             .fold(State::Initial, |state, line| {
-                state.next(&line)
+                state.next(line)
             })
             .fold()?;
         Ok(records)

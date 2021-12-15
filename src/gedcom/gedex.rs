@@ -133,7 +133,7 @@ impl GedEx {
 
     /// Method allowing to count all the lines that can't
     /// be parsed by the `parse` method.
-    pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
+    pub fn count_unparsed(file: &std::fs::File) -> i64 {
         let reader = BufReader::new(file);
         let re = Self::regex_line();
         let re_ref = Self::regex_ref();

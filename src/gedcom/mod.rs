@@ -36,171 +36,12 @@ pub type ParseResult = Result<RecordRegistry, ParseError>;
 /// > so it's under heavy developpment.
 #[derive(Default,Debug,Clone)]
 pub struct Record {
+    pub rtype: String,
     pub id: u64,
     pub name: String,
     pub father: Option<Rc<RefCell<Record>>>,
     pub mother: Option<Rc<RefCell<Record>>>,
     pub children: Vec<Rc<RefCell<Record>>>
-}
-
-trait NdfaState {
-    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState>;
-
-    fn is_final(&self) -> bool {
-        return false;
-    }
-
-    fn success(&self) -> bool {
-        return false;
-    }
-
-    fn fold(self) -> RecordVec;
-}
-
-#[derive(Default,Debug,Clone)]
-struct EntryState {
-    model: RecordVec,
-}
-
-#[derive(Default,Debug,Clone)]
-struct ReferenceState {
-    model: RecordVec
-}
-
-#[derive(Default,Debug,Clone)]
-struct TagState {
-    model: RecordVec,
-    level: i32
-}
-
-#[derive(Default,Debug,Clone)]
-struct FailedState {
-}
-
-impl NdfaState for TagState {
-    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
-        if let GedLine::Data(lvl, tag, _) = line {
-
-            if *lvl < self.level {
-                return Box::new(ReferenceState {
-                    model: self.model.clone()
-                })
-            }
-
-            if *lvl == self.level {
-                match tag {
-                    _ => self.model.push(Record {
-                        ..Default::default()
-                    })
-                }
-                return Box::new(TagState {
-                    model: self.model.clone(),
-                    level: self.level
-                });
-            }
-
-            if *lvl == self.level + 1 {
-                let mut rec: Record = self.model.pop().unwrap();
-                match tag {
-                    _ => rec.children.push(Record {
-                        ..Default::default()
-                    }.into())
-                }
-                self.model.push(rec);
-                return Box::new(TagState {
-                    model: self.model.clone(),
-                    level: self.level + 1
-                })
-            }
-        }
-        Box::new(FailedState {})
-    }
-
-    fn success(&self) -> bool {
-        true
-    }
-
-    fn is_final(&self) -> bool {
-        true
-    }
-
-    fn fold(self) -> RecordVec {
-        self.model
-    }
-}
-
-impl NdfaState for ReferenceState {
-    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
-        if let GedLine::Ref(lvl, rtype, rid, None) = line {
-            if *lvl == 0 {
-                let rec: Record = Record {
-                    ..Default::default()
-                };
-                self.model.push(rec);
-                return Box::new(TagState {
-                    model: self.model.clone(),
-                    level: 1
-                });
-            }
-        }
-        Box::new(FailedState {})
-    }
-
-    fn success(&self) -> bool {
-        false
-    }
-
-    fn is_final(&self) -> bool {
-        false
-    }
-
-    fn fold(self) -> RecordVec {
-        self.model
-    }
-}
-
-impl NdfaState for EntryState {
-    fn advance<'a>(&mut self, line: &'a GedLine) -> Box<dyn NdfaState> {
-        if let GedLine::Data(lvl, tag, None) = line {
-            if *lvl == 0 && *tag == "HEAD" {
-                return Box::new(TagState {
-                    model: Default::default(),
-                    level: 1
-                });
-            }
-        }
-        Box::new(FailedState {})
-    }
-
-    fn success(&self) -> bool {
-        false
-    }
-
-    fn is_final(&self) -> bool {
-        false
-    }
-
-    fn fold(self) -> RecordVec {
-        Default::default()
-    }
-}
-
-impl NdfaState for FailedState {
-    fn advance<'a>(&mut self, _: &'a GedLine) -> Box<dyn NdfaState> {
-        Box::new(FailedState {})
-    }
-
-    fn is_final(&self) -> bool {
-        true
-    }
-
-    fn success(&self) -> bool {
-        false
-    }
-
-    fn fold(self) -> RecordVec {
-        Default::default()
-    }
 }
 
 /// Converter from `Record` to `RecordRef`.
@@ -316,27 +157,6 @@ impl GedParser {
         Ok(RecordRegistry::new())
     }
 
-    fn ndfa_parse(&mut self, file: &std::fs::File) -> ParseResult {
-        let reader = BufReader::new(file);
-        let content: Vec<GedLine> = reader.lines().into_iter()
-            .filter_map(|x| x.ok())
-            .filter_map(|x| GedParser::parse_line(&x))
-            .collect();
-        let mut state: Box<dyn NdfaState> = Box::new(EntryState::default());
-        for line in content.iter() {
-            state = state.advance(line);
-            if state.is_final() && !state.success() {
-                break;
-            }
-        };
-        if state.is_final() && state.success() {
-            println!("Successfully parsed!");
-        } else {
-            println!("Something did not parse correctly.");
-        }
-        Err(ParseError::Runtime("Not implemented.".to_string()))
-    }
-
     /// Method allowing to count all the lines that can't
     /// be parsed by the `parse` method.
     pub fn count_unparsed(&self, file: &std::fs::File) -> i64 {
@@ -444,7 +264,7 @@ impl Parser for GedParser {
     type FileType = std::fs::File;
 
     fn parse(&mut self, file: &Self::FileType) -> ParseResult {
-        self.ndfa_parse(file)
+        self.classic_parse(file)
     }
 }
 

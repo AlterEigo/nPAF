@@ -29,7 +29,7 @@ impl State {
         }
     }
 
-    fn handle_ref(recs: Vec<Record>, line: &GedLine) -> Self {
+    fn handle_ref(mut recs: Vec<Record>, line: &GedLine) -> Self {
         let cond: &Predicate = &|line| {
             if let GedLine::Ref(lvl, _, _, _) = line {
                 if *lvl == 0 {
@@ -42,6 +42,16 @@ impl State {
             }
         };
         if cond(line) {
+            let (rtype, number): (&String, &u64) = match line {
+                GedLine::Ref(_, rtype, number, _) => (rtype, number),
+                _ => panic!("Unexpected ged line type.")
+            };
+            let nrec = Record {
+                rtype: rtype.clone(),
+                id: *number,
+                ..Default::default()
+            };
+            recs.push(nrec);
             Self::RecordTag {records: recs, level: 1}
         } else {
             Self::Invalid

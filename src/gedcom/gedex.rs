@@ -12,7 +12,11 @@ enum State {
 impl State {
     fn handle_initial(line: &GedLine) -> Self {
         let cond: &Predicate = &|line| {
-            false
+            let s = String::from("HEAD");
+            match line {
+                GedLine::Data(0, s, None) => true,
+                _ => false
+            }
         };
         if cond(line) {
             Self::Reference(Default::default())
@@ -67,6 +71,13 @@ impl State {
         match self {
             Self::Initial | Self::Reference(_) | Self::Invalid => false,
             Self::RecordTag(_) => true
+        }
+    }
+
+    pub fn fold(self) -> Result<Vec<Record>, ParseError> {
+        match self {
+            Self::Initial | Self::Invalid => Err(ParseError::Runtime(String::from("Not GEDCOM data."))),
+            Self::Reference(recs) | Self::RecordTag(recs) => Ok(recs)
         }
     }
 }

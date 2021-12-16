@@ -1,19 +1,29 @@
 use crate::gedcom::{GedLine,Record,ParseError};
+use std::convert::{TryInto, TryFrom};
 use std::io::{BufReader, BufRead};
 
 extern crate regex;
 use regex::Regex;
 
 type Predicate = dyn Fn(&GedLine) -> bool;
+type TagStack = Vec<Tag>;
 
 #[derive(Default,Clone,Debug)]
 struct Tag {
     name: String,
-    content: String,
+    content: Option<String>,
     nested: Vec<Tag>
 }
 
 impl Tag {
+    fn new(name: &str, content: Option<&str>) -> Self {
+        Tag {
+            name: String::from(name),
+            content: content.map(|x| String::from(x)),
+            ..Default::default()
+        }
+    }
+
     fn nest(self, child: Tag) -> Self {
         Self {
             nested: [&self.nested[..], &[child]].concat(),
@@ -22,86 +32,115 @@ impl Tag {
     }
 }
 
+#[derive(Debug)]
 enum State {
     Initial,
-    Reference {records: Vec<Record>},
-    RecordTag {records: Vec<Record>, level: i32},
+    Reference {sequence: Vec<Tag>},
+    RecordTag {sequence: Vec<Tag>, stack: TagStack},
     Invalid
 }
 
+fn fold_stack(mut stack: TagStack) -> Option<Tag> {
+    let mut stack = stack.into_iter().rev();
+    match &stack.len() {
+        0 => None,
+        1 => stack.next(),
+        _ => {
+            let last = stack.next().unwrap();
+            Some(stack.fold(last, |prev, current| current.nest(prev)))
+        }
+    }
+}
+
+fn fold_stack_lvl<'a>(stack: &'a mut TagStack, pos: usize) -> &'a mut TagStack {
+    let folded = fold_stack(stack.drain(pos..).collect());
+    if let Some(x) = folded {
+        stack.push(x);
+    }
+    stack
+}
+
 impl State {
-    fn handle_initial(line: GedLine) -> Self {
-        let cond: &Predicate = &|line| {
-            let s = String::from("HEAD");
-            match line {
-                GedLine::Data(0, s, None) => true,
-                _ => false
-            }
-        };
-        if cond(&line) {
-            Self::Reference {records: Default::default()}
-        } else {
-            Self::Invalid
-        }
-    }
 
-    fn handle_ref(mut recs: Vec<Record>, line: GedLine) -> Self {
-        let cond: &Predicate = &|line| {
-            if let GedLine::Ref(lvl, _, _, _) = line {
-                if *lvl == 0 {
-                    true
-                } else {
-                    false
+    fn advance_initial(self, data: GedLine) -> Self {
+        match data {
+            GedLine::Data(lvl, tag, content) => {
+                if lvl != 0 || tag != "HEAD" || content != None {
+                    return Self::Invalid;
                 }
-            } else {
-                false
-            }
-        };
-        if cond(&line) {
-            Self::RecordTag {records: recs, level: 1}
-        } else {
-            Self::Invalid
+                let ntag = Tag::new("HEAD", None);
+                Self::RecordTag {sequence: Default::default(), stack: vec!(ntag)}
+            },
+            _ => State::Invalid
         }
     }
 
-    fn handle_tag(recs: Vec<Record>, lvl: i32, line: GedLine) -> Self {
-        match line {
-            GedLine::Ref(nlvl, _, _, _) => {
-                if nlvl == 0 {
-                    let (rtype, number): (String, u64) = match line {
-                        GedLine::Ref(_, rtype, number, _) => (rtype, number),
-                        _ => panic!("Unexpected ged line type.")
-                    };
-                    let nrec = Record {
-                        rtype: rtype,
-                        id: number,
+    fn concat(s1: &str, s2: &str) -> String {
+        [&s1[..], &s2[..]].concat()
+    }
+
+    fn advance_ref(self, data: GedLine) -> Self {
+        let sequence: Vec<Tag> = match self {
+            State::Reference {sequence: seq, ..} => seq,
+            _ => panic!("Unexpected state.")
+        };
+        match data {
+            GedLine::Ref(0, rtype, rid, content) => {
+                let stack: TagStack = vec!(
+                    Tag {
+                        name: Self::concat(&rtype, &rid.to_string()),
+                        content: content,
                         ..Default::default()
-                    };
-                    Self::RecordTag {records: [&recs[..], &[nrec]].concat(), level: 1}
+                    }
+                );
+                Self::RecordTag {sequence: sequence, stack: stack}
+            },
+            _ => Self::Invalid
+        }
+    }
+
+    fn advance_ref_or_tag(self, data: GedLine) -> Self {
+        let (mut sequence, mut stack) = match self {
+            Self::RecordTag {sequence: v1, stack: v2, ..} => (v1, v2),
+            _ => panic!("Unexpected state.")
+        };
+        match data {
+            GedLine::Ref(..) => Self::advance_ref(State::Reference {
+                sequence: [&sequence[..], &[fold_stack(stack).unwrap()]].concat()
+            }, data),
+            GedLine::Data(level, tag, content) => {
+                let ntag = Tag {
+                    name: tag,
+                    content: content,
+                    ..Default::default()
+                };
+                let level = usize::from(level);
+                let (last_tag, last_level) = (stack.last().unwrap(), stack.len() - 1);
+                if level == last_level {
+                    fold_stack_lvl(&mut stack, level - 1);
+                    stack.push(ntag);
+                    Self::RecordTag {sequence: sequence, stack: stack}
+                } else if level == (last_level + 1) {
+                    stack.push(ntag);
+                    Self::RecordTag {sequence: sequence, stack: stack}
+                } else if level < last_level {
+                    fold_stack_lvl(&mut stack, level - 1);
+                    stack.push(ntag);
+                    Self::RecordTag {sequence: sequence, stack: stack}
                 } else {
                     Self::Invalid
                 }
             },
-            GedLine::Data(nlvl, _, _) => {
-                if nlvl == (lvl + 1) || nlvl == lvl {
-                    Self::RecordTag {records: recs, level: nlvl}
-                } else {
-                    Self::Invalid
-                }
-            }
+            _ => State::Invalid
         }
-    }
-
-    fn handle_invalid(line: GedLine) -> Self {
-        Self::Invalid
     }
 
     pub fn next(self, line: GedLine) -> Self {
         match self {
-            Self::Initial => Self::handle_initial(line),
-            Self::Reference {records} => Self::handle_ref(records, line),
-            Self::RecordTag {records, level} => Self::handle_tag(records, level, line),
-            Self::Invalid => Self::handle_invalid(line)
+            Self::Initial => self.advance_initial(line),
+            Self::Reference {..} => self.advance_ref(line),
+            Self::RecordTag {..} => self.advance_ref_or_tag(line),
+            Self::Invalid => self
         }
     }
 
@@ -121,9 +160,19 @@ impl State {
 
     pub fn fold(self) -> Result<Vec<Record>, ParseError> {
         match self {
-            Self::Initial | Self::Invalid => Err(ParseError::Runtime(String::from("Not GEDCOM data."))),
-            Self::Reference {records} | Self::RecordTag {records, ..} => Ok(records)
-        }
+            Self::RecordTag {sequence: mut seq, stack: stack} => {
+                seq.push(
+                    fold_stack(stack).unwrap()
+                );
+                println!("SEQUENCE: {:#?}", seq);
+            },
+            _ => ()
+        };
+        Err(
+            ParseError::Runtime(
+                String::from("Not implemented.")
+            )
+        )
     }
 }
 
@@ -139,14 +188,14 @@ pub struct GedEx {
 }
 
 impl GedEx {
-    fn new(contents: Vec<String>) -> Self {
+    pub fn new(contents: Vec<String>) -> Self {
         GedEx {
             contents: contents,
             ..Default::default()
         }
     }
 
-    fn parse(self) -> Result<Vec<Record>, ParseError> {
+    pub fn parse(self) -> Result<Vec<Record>, ParseError> {
         let records = self.contents.into_iter()
             .filter_map(|line| Self::parse_line(&line))
             .fold(State::Initial, |state, line| {

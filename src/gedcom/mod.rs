@@ -73,8 +73,8 @@ pub enum ParseError {
 /// > structure with a type associated to it.
 #[derive(Debug,Clone)]
 enum GedLine {
-    Data(i32, String, Option<String>),
-    Ref(i32, String, u64, Option<String>)
+    Data(u16, String, Option<String>),
+    Ref(u16, String, u64, Option<String>)
 }
 
 impl GedLine {
@@ -83,7 +83,7 @@ impl GedLine {
     /// of matching the enum manually.
     /// > The enum may become a struct in the future so
     /// > this function might disappear as well.
-    fn level(&self) -> i32 {
+    fn level(&self) -> u16 {
         match &self {
             Self::Data(lvl, _, _) | Self::Ref(lvl, _, _, _) => *lvl
         }
@@ -138,7 +138,15 @@ pub struct GedParser {
 
 impl GedParser {
     fn classic_parse(&mut self, file: &std::fs::File) -> ParseResult {
-        Err(ParseError::Runtime(String::from("Not implemented.")))
+        let content: Vec<String> = BufReader::new(file).lines()
+            .filter_map(|x| x.ok())
+            .collect();
+        let res = gedex::GedEx::new(content).parse();
+        Err(
+            ParseError::Runtime(
+                String::from("Not implemented.")
+            )
+        )
     }
 }
 
